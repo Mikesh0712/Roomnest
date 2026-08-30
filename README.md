@@ -2,12 +2,17 @@
 
 > An intelligent, map-centric hyperlocal accommodation discovery and rental platform designed for students and working professionals near educational and tech hubs.
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-v19-blue.svg)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-v8-purple.svg)](https://vitejs.dev/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-brightgreen.svg)](https://www.mongodb.com/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v3.4-38B2AC.svg)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live Website](https://img.shields.io/badge/🌐_Live_Demo-roomnest.vercel.app-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://roomnest.vercel.app/)
+[![API Status](https://img.shields.io/badge/🚀_API_Docs-Swagger_UI-46E3B7?style=for-the-badge&logo=swagger&logoColor=black)](https://roomnest-m8uu.onrender.com/api/docs)
+[![GitHub](https://img.shields.io/badge/GitHub-Mikesh0712%2FRoomnest-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Mikesh0712/Roomnest)
+
+---
+
+## 🔗 Live Deployments & Showcase Links
+
+- **🌐 Live Web Application:** [https://roomnest.vercel.app](https://roomnest.vercel.app)
+- **⚡ Production REST API:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
+- **📖 Interactive API Documentation (Swagger UI):** [https://roomnest-m8uu.onrender.com/api/docs](https://roomnest-m8uu.onrender.com/api/docs)
 
 ---
 
@@ -26,14 +31,14 @@
 
 ```
 roomnest/
-├── client/                 # React 19 + Vite Frontend SPA
+├── client/                 # React 19 + Vite Frontend SPA (Hosted on Vercel)
 │   ├── src/
 │   │   ├── components/     # UI, Maps, Modals, Listings, Dashboard
 │   │   ├── context/        # App State & Internationalization
 │   │   └── utils/          # Formatting & Helpers
 │   └── vercel.json         # Vercel Deployment Configuration
 │
-└── server/                 # Node.js + Express REST API
+└── server/                 # Node.js + Express REST API (Hosted on Render)
     ├── data/               # Seed scripts with verified real-world listings
     ├── src/
     │   ├── config/         # MongoDB connection & Cloudinary setup
@@ -73,24 +78,24 @@ npm run dev              # Starts frontend on http://localhost:5173
 
 ---
 
-## ☁️ Deployment Guide
+## ☁️ Deployment Configuration
 
-### Backend on Render / Railway
-1. Set Root Directory to `server`.
-2. Build Command: `npm install`
-3. Start Command: `npm start`
-4. Set Environment Variables:
-   - `NODE_ENV=production`
-   - `MONGO_URI=<your-atlas-connection-string>`
-   - `JWT_SECRET=<your-secret>`
-   - `CLIENT_URL=https://<your-vercel-app>.vercel.app`
+### Backend on Render
+- **Root Directory**: `server`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Environment Variables**:
+  - `NODE_ENV=production`
+  - `MONGO_URI=<your-atlas-connection-string>`
+  - `JWT_SECRET=<your-secret>`
+  - `CLIENT_URL=https://roomnest.vercel.app`
 
 ### Frontend on Vercel
-1. Set Root Directory to `client`.
-2. Framework: `Vite`.
-3. Output Directory: `dist`.
-4. Set Environment Variable:
-   - `VITE_API_URL=https://<your-render-app>.onrender.com/api`
+- **Root Directory**: `client`
+- **Framework Preset**: `Vite`
+- **Output Directory**: `dist`
+- **Environment Variable**:
+  - `VITE_API_URL=https://roomnest-m8uu.onrender.com/api`
 
 ---
 
