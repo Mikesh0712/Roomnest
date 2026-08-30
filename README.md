@@ -3,16 +3,19 @@
 > An intelligent, map-centric hyperlocal accommodation discovery and rental platform designed for students and working professionals near educational and tech hubs.
 
 [![Live Website](https://img.shields.io/badge/🌐_Live_Demo-roomnest.vercel.app-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://roomnest.vercel.app/)
-[![API Status](https://img.shields.io/badge/🚀_API_Docs-Swagger_UI-46E3B7?style=for-the-badge&logo=swagger&logoColor=black)](https://roomnest-m8uu.onrender.com/api/docs)
 [![GitHub](https://img.shields.io/badge/GitHub-Mikesh0712%2FRoomnest-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Mikesh0712/Roomnest)
 
 ---
 
-## 🔗 Live Deployments & Showcase Links
+> 💡 **Demo Showcase Note:**  
+> Currently, this live deployment serves as a **functional proof-of-concept and prototype demonstration** designed to showcase the core user experience, hyperlocal radius mapping, verification systems, and rental workflow for early testing and investor presentations.
+
+---
+
+## 🔗 Live Showcase Links
 
 - **🌐 Live Web Application:** [https://roomnest.vercel.app](https://roomnest.vercel.app)
-- **⚡ Production REST API:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
-- **📖 Interactive API Documentation (Swagger UI):** [https://roomnest-m8uu.onrender.com/api/docs](https://roomnest-m8uu.onrender.com/api/docs)
+- **⚡ Backend API Health:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
 
 ---
 
@@ -22,8 +25,34 @@
 - ⚡ **Hyperlocal Distance & Cost Breakdown**: Exact breakdown of rent, deposit, maintenance, electricity tariffs, food options, and lock-in periods.
 - 🛡️ **Verified Properties & Safety Rating**: Verification badges, student/tenant reviews, owner verification, and curfew/policy filters.
 - 🔄 **Side-by-Side Property Comparison**: Instant comparative analysis of amenities, deposits, distances, and monthly costs.
-- 🔒 **Enterprise-Grade REST API**: Documented with Swagger UI (`/api/docs`), JWT Authentication, Rate Limiting, Mongo Sanitization, and Helmet Security.
+- 🔒 **Secure Backend Architecture**: JWT Authentication, Rate Limiting, Mongo Sanitization, and Helmet Security.
 - 🌐 **Multilingual Support**: English, Hindi, and Odia local language support.
+
+---
+
+## 🗺️ Future Roadmap & City Expansion
+
+RoomNest is architected to scale rapidly from specialized student micro-markets into a nationwide rental infrastructure across all urban tiers:
+
+```mermaid
+flowchart LR
+    A["Phase 1: Pilot Hubs\n(Tier-2 Student Clusters)"] --> B["Phase 2: Tier-1 Metros\n(University & IT Belts)"]
+    B --> C["Phase 3: Tier-2 & Tier-3 Cities\n(Pan-India Growth Nodes)"]
+```
+
+### 📍 Planned Rollout Strategy:
+
+1. **Phase 1 — Pilot Student & Coaching Clusters (Current Focus):**
+   - Educational zones & university corridors (e.g., Bhubaneswar, Kota, Pune student suburbs).
+   - Validation of hyperlocal radar search, verified owner listings, and direct tenant booking.
+
+2. **Phase 2 — Tier-1 Metros & Tech Corridors:**
+   - **Cities:** Bengaluru, Delhi NCR, Hyderabad, Mumbai, Pune, Chennai, Kolkata.
+   - **Target Segments:** University campus clusters, coaching hubs (Mukherjee Nagar, Kalu Sarai), and tech park commuter belts (Whitefield, Hitec City, Hinjewadi).
+
+3. **Phase 3 — Tier-2 & Tier-3 Growth Cities:**
+   - **Cities:** Indore, Jaipur, Chandigarh, Lucknow, Dehradun, Coimbatore, Patna, Cuttack, Vadodara, Visakhapatnam, and emerging educational centers.
+   - **Focus:** Standardizing unorganized PG/hostel ecosystems, vernacular localization, and transparent pricing in fast-growing college towns.
 
 ---
 
@@ -43,7 +72,6 @@ roomnest/
     ├── src/
     │   ├── config/         # MongoDB connection & Cloudinary setup
     │   ├── controllers/    # API endpoint controllers
-    │   ├── docs/           # Swagger / OpenAPI 3.0 documentation
     │   ├── middleware/     # Auth, Roles, Error & Rate Limiters
     │   ├── models/         # Mongoose Schemas (Property, User, Visit, Review)
     │   ├── routes/         # Modular REST Routes
@@ -67,7 +95,6 @@ cp .env.example .env     # Configure your MONGO_URI and JWT_SECRET
 npm run seed             # Seed sample verified listings
 npm run dev              # Starts API on http://localhost:5000
 ```
-API Documentation will be live at: `http://localhost:5000/api/docs`
 
 ### 3. Frontend Setup
 ```bash
