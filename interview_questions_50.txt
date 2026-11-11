@@ -1,0 +1,85 @@
+================================================================================
+ROOMNEST FULL-STACK TECHNICAL INTERVIEW QUESTIONS (50 PROBABLE QUESTIONS)
+Target Roles : Graduate / Fresher Software Developer (SDE-1 / Associate Software Engineer)
+Target MNCs  : LSEG (London Stock Exchange Group), Cognizant, Deloitte, Accenture, Infosys
+Stack Covered: React 19, Vite, Node.js, Express, MongoDB Atlas, Leaflet/Maps, JWT, Cloud
+================================================================================
+
+--------------------------------------------------------------------------------
+SECTION 1: SYSTEM ARCHITECTURE & PROJECT OVERVIEW (Q1 - Q8)
+--------------------------------------------------------------------------------
+1. Walk me through the high-level architecture of your RoomNest application. How does data flow from the client to the database?
+2. What problem does RoomNest solve that existing housing platforms (like MagicBricks or 99acres) fail to address for students?
+3. Why did you choose a decoupled Client-Server architecture (React on Vercel + Node/Express on Render) instead of a monolithic server-rendered app (like Next.js SSR or EJS)?
+4. How do you handle environment variables in development versus production across frontend and backend?
+5. How would you handle a sudden 100x spike in traffic during university admission season?
+6. If the backend service goes down, how does your frontend handle network failures gracefully?
+7. Explain the request-response lifecycle from the moment a user clicks "Search Listings" until the map pins render on screen.
+8. If you had to scale this platform across 50 cities, what architectural changes or caching layers (e.g., Redis) would you introduce?
+
+--------------------------------------------------------------------------------
+SECTION 2: FRONTEND — REACT 19, VITE, HOOKS & UI (Q9 - Q18)
+--------------------------------------------------------------------------------
+9. What are the advantages of using Vite over Create React App (CRA) or Webpack in your project?
+10. How does state management work in RoomNest? Why did you choose React Context API over Redux or Zustand?
+11. What is the difference between controlled and uncontrolled components? Where have you used them in RoomNest?
+12. Explain the purpose of the `useEffect` hook in your listing card/map component and how you prevent infinite re-render loops or memory leaks.
+13. How does React's Virtual DOM work, and how does React 19 optimize component rendering compared to older React versions?
+14. What are React Custom Hooks? Have you written or would you write a custom hook (e.g., `useListings` or `useGeoLocation`) in this project?
+15. How do you handle client-side routing and prevent 404 errors when a user refreshes a subpage on Vercel?
+16. How did you structure your Tailwind CSS utility classes and design system to support dynamic dark/light themes?
+17. Why is prop drilling a problem in large React applications, and how does Context API mitigate it?
+18. How would you optimize the frontend bundle size if the Leaflet map and Lucide icons make the bundle too heavy?
+
+--------------------------------------------------------------------------------
+SECTION 3: GEOLOCATION, MAPS & HYPERLOCAL LOGIC (Q19 - Q24)
+--------------------------------------------------------------------------------
+19. Why did you implement Leaflet and OpenStreetMap instead of Google Maps JavaScript API? What are the cost and technical trade-offs?
+20. How does the radius radar calculate the distance between a property's coordinates (latitude/longitude) and a college hub?
+21. Explain the Haversine formula or Euclidean distance formula in the context of spatial location search.
+22. How do you prevent the map from re-initializing or flickering every time a user toggles a budget filter?
+23. If there are 1,000 properties clustered within a 500m radius, how would you prevent marker overlapping (marker clustering)?
+24. How do you handle situations where a user denies browser location permissions?
+
+--------------------------------------------------------------------------------
+SECTION 4: BACKEND — NODE.JS, EXPRESS & REST API DESIGN (Q25 - Q34)
+--------------------------------------------------------------------------------
+25. Explain the Node.js event loop, single-threaded architecture, and how it handles thousands of concurrent I/O requests.
+26. What is Express middleware? What is the execution order of middlewares (Helmet, CORS, RateLimiter, BodyParser, ErrorHandler) in your `app.js`?
+27. Why is centralized error-handling middleware important in Express, and how do you prevent uncaught exceptions from crashing the server?
+28. What HTTP status codes are returned by your API (e.g., 200, 201, 400, 401, 403, 404, 429, 500), and when is each used?
+29. What is the difference between `PUT` and `PATCH` when updating property details or user profiles?
+30. How did you implement API rate limiting (`express-rate-limit`), and why is it crucial for public endpoints?
+31. What is the difference between synchronous and asynchronous code execution in Node.js? How do `async/await` and Promises help?
+32. What is the purpose of `helmet` and `express-mongo-sanitize` in securing your Express server?
+33. How does file/image upload work in your backend using Multer and Cloudinary? Why not store images directly on the Render server filesystem?
+34. What is the difference between `process.env` and config files? How do you ensure secrets are never leaked into source control?
+
+--------------------------------------------------------------------------------
+SECTION 5: DATABASE — MONGODB, MONGOOSE & DATA MODELING (Q35 - Q41)
+--------------------------------------------------------------------------------
+35. Why did you choose MongoDB (NoSQL) over a relational database like PostgreSQL or MySQL for this project?
+36. Walk me through your Mongoose schema design for `Property`, `User`, `Review`, and `VisitBooking`.
+37. What is MongoDB 2dsphere indexing, and how does it accelerate geospatial proximity queries (`$near`, `$geoWithin`)?
+38. What is the difference between embedding documents vs referencing documents (`ObjectId` + `populate()`) in Mongoose? When should you use which?
+39. How do you prevent MongoDB Injection attacks, and how does `express-mongo-sanitize` neutralize malicious query operators (like `$gt`, `$ne`)?
+40. What are Mongoose schema validation and middleware hooks (`pre('save')`, `post('save')`), and how did you use them for password hashing?
+41. How does MongoDB handle transactions (ACID compliance) if a booking and payment update must happen atomically?
+
+--------------------------------------------------------------------------------
+SECTION 6: AUTHENTICATION, SECURITY & NETWORKING (Q42 - Q47)
+--------------------------------------------------------------------------------
+42. Explain the complete JWT (JSON Web Token) authentication workflow: generation, transmission, verification, and decoding.
+43. What is the structure of a JWT (Header, Payload, Signature)? What is the mathematical role of `JWT_SECRET`?
+44. Why should sensitive data (like plaintext passwords) never be stored in a JWT payload?
+45. How does Bcrypt hashing work? What is "salt", and why is `bcrypt.hash()` one-way compared to encryption?
+46. What is CORS (Cross-Origin Resource Sharing)? Why did you configure origin whitelisting in your backend rather than leaving it open with `*`?
+47. What is the difference between Role-Based Access Control (RBAC) for Tenants vs Landlords vs Admin, and how is it enforced via Express middleware?
+
+--------------------------------------------------------------------------------
+SECTION 7: DEPLOYMENT, CLOUD & LIVE TROUBLESHOOTING (Q48 - Q50)
+--------------------------------------------------------------------------------
+48. In MongoDB Atlas, why did you have to configure Network Access to `0.0.0.0/0` for Render deployment? Why is this safe despite allowing any IP?
+49. What is a "cold start" in cloud hosting platforms like Render Free tier, and how can it be mitigated using health check monitors (e.g., UptimeRobot)?
+50. If an interviewer opens your live website (https://roomnest.vercel.app) and an API call fails with a 403 or CORS error, walk me through your step-by-step debugging process.
+================================================================================

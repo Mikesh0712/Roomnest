@@ -5,6 +5,22 @@ export const errorHandler = (err, req, res, next) => {
   let message = err.message || 'Internal Server Error';
   let errors = err.errors || [];
 
+  // Express body-parser payload too large (Buffer overflow / payload DoS protection)
+  if (err.type === 'entity.too.large' || err.status === 413) {
+    statusCode = 413;
+    message = 'Payload size exceeded: Request body exceeds maximum permitted threshold (100kb).';
+  }
+
+  // Zod Validation Error handling
+  if (err.name === 'ZodError') {
+    statusCode = 400;
+    message = 'Input validation failed';
+    errors = (err.errors || []).map(e => ({
+      field: e.path.join('.'),
+      message: e.message
+    }));
+  }
+
   // Mongoose CastError (invalid ObjectId)
   if (err.name === 'CastError') {
     statusCode = 400;

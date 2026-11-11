@@ -54,6 +54,16 @@ export const updateVisitStatus = async (visitId, statusData, user) => {
     throw new ApiError(404, 'Visit request not found');
   }
 
+  // Broken Access Control / IDOR Defense: Only the visit tenant, property owner, broker, or admin can modify
+  const isTenant = visit.tenant && visit.tenant.toString() === user._id.toString();
+  const isOwner = visit.owner && visit.owner.toString() === user._id.toString();
+  const isBroker = visit.broker && visit.broker.toString() === user._id.toString();
+  const isAdmin = user.role === 'admin';
+
+  if (!isTenant && !isOwner && !isBroker && !isAdmin) {
+    throw new ApiError(403, 'Access denied: You do not have permission to modify this visit request');
+  }
+
   const { status, requestedDate, requestedTime, notes, cancellationReason } = statusData;
 
   visit.status = status;

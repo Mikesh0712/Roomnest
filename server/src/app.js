@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './docs/swaggerDef.js';
 import { errorHandler } from './middleware/error.middleware.js';
 import { apiLimiter } from './middleware/rateLimiter.middleware.js';
+import { sanitizeMiddleware } from './middleware/sanitize.middleware.js';
 
 // Route Imports
 import authRoutes from './routes/auth.routes.js';
@@ -25,7 +26,20 @@ import adminRoutes from './routes/admin.routes.js';
 const app = express();
 
 // Security Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://unpkg.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      connectSrc: ["'self'", 'https:', 'http:']
+    }
+  }
+}));
+
 // Configurable CORS origins for production and local development
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
@@ -49,8 +63,15 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json({ limit: '10mb' }));
+
+// Buffer overflow / DoS protection: limit standard JSON payload size to 100kb
+app.use(express.json({ limit: '100kb' }));
+
+// NoSQL query selector injection mitigation ($gt, $ne, etc.)
 app.use(mongoSanitize());
+
+// Global XSS and Injection input sanitization
+app.use(sanitizeMiddleware);
 
 // Global API Rate Limiter
 app.use('/api/', apiLimiter);

@@ -128,7 +128,7 @@ const MainContent = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main style={{ flex: 1 }}>
+      <main className="rn-main-mobile-pad" style={{ flex: 1 }}>
 
         {activeTab === 'listings' && (
           <>
@@ -161,8 +161,8 @@ const MainContent = () => {
               </div>
 
               {viewMode === 'split' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 24, alignItems: 'start' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px,1fr))', gap: 18 }}>
+                <div className="rn-listings-grid-split">
+                  <div className="rn-listings-cards-col">
                     {filteredListings.length > 0 ? filteredListings.map(item => (
                       <ListingCard key={item.id} listing={item} />
                     )) : (
@@ -173,14 +173,14 @@ const MainContent = () => {
                       </div>
                     )}
                   </div>
-                  <div style={{ position: 'sticky', top: 130, height: 'calc(100vh - 160px)' }}>
+                  <div className="rn-listings-map-col">
                     <div className="rn-map-panel" style={{ height: '100%' }}>
                       <InteractiveMap />
                     </div>
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px,1fr))', gap: 18 }}>
+                <div className="rn-listings-cards-col">
                   {filteredListings.length > 0 ? filteredListings.map(item => (
                     <ListingCard key={item.id} listing={item} />
                   )) : (

@@ -12,6 +12,11 @@ const generateToken = (userId, role) => {
 export const registerUser = async (userData) => {
   const { name, email, phone, password, role } = userData;
 
+  // Prevent vertical privilege escalation: reject any attempt to self-assign admin
+  if (role === 'admin') {
+    throw new ApiError(403, 'Privilege escalation violation: Administrative accounts cannot be registered publicly');
+  }
+
   const normalizedEmail = email.toLowerCase().trim();
   const normalizedPhone = phone.trim();
 

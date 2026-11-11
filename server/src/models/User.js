@@ -87,6 +87,7 @@ const userSchema = new mongoose.Schema({
   toJSON: {
     transform(doc, ret) {
       delete ret.passwordHash;
+      delete ret.__v;
       return ret;
     }
   }

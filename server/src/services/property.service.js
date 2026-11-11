@@ -2,6 +2,7 @@ import { Property } from '../models/Property.js';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/apiError.js';
 import { calculateHaversineDistance } from '../utils/distance.js';
+import { escapeRegex } from '../utils/sanitize.js';
 
 export const createProperty = async (propertyData, user) => {
   const {
@@ -58,9 +59,10 @@ export const searchProperties = async (queryParams) => {
 
   const query = {};
 
-  if (city) query.city = new RegExp(`^${city}$`, 'i');
-  if (state) query.state = new RegExp(`^${state}$`, 'i');
-  if (locality) query.locality = new RegExp(locality, 'i');
+  // Escape regex metacharacters to eliminate ReDoS and regex injection attacks
+  if (city) query.city = new RegExp(`^${escapeRegex(city)}$`, 'i');
+  if (state) query.state = new RegExp(`^${escapeRegex(state)}$`, 'i');
+  if (locality) query.locality = new RegExp(escapeRegex(locality), 'i');
   if (propertyType && propertyType !== 'All') query.propertyType = propertyType;
   if (propertyStatus) query.status = propertyStatus;
 
@@ -244,6 +246,15 @@ export const confirmAvailability = async (id, user) => {
   const property = await Property.findById(id);
   if (!property) {
     throw new ApiError(404, 'Property listing not found');
+  }
+
+  // Broken Access Control / IDOR Defense: Only listing owner, assigned broker, or admin can confirm
+  const isOwner = property.owner && property.owner.toString() === user._id.toString();
+  const isBroker = property.broker && property.broker.toString() === user._id.toString();
+  const isAdmin = user.role === 'admin';
+
+  if (!isOwner && !isBroker && !isAdmin) {
+    throw new ApiError(403, 'Access denied: You do not have permission to confirm availability for this property');
   }
 
   property.lastAvailabilityConfirmedAt = new Date();
