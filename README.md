@@ -16,6 +16,45 @@
 
 - **🌐 Live Web Application:** [https://roomnest.vercel.app](https://roomnest.vercel.app)
 - **⚡ Backend API Health:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
+- **📚 Interactive Swagger Docs:** [https://roomnest-m8uu.onrender.com/api/docs](https://roomnest-m8uu.onrender.com/api/docs)
+- **🛡️ Full AppSec Security Report:** [SECURITY.md](SECURITY.md)
+
+---
+
+## 🛡️ Cybersecurity & Defensive Architecture (OWASP Top 10)
+
+RoomNest incorporates an enterprise-grade **Application Security (AppSec)** layer with automated regression testing and defense-in-depth controls. Full threat modeling (STRIDE) and CWE mappings are documented in [SECURITY.md](SECURITY.md).
+
+### 🧪 Run Automated Security Test Suite (16/16 Passing)
+To verify all defensive controls against XSS, Buffer/Payload DoS, Privilege Escalation, ReDoS, and IDOR:
+
+```bash
+cd server
+npm run test:security
+```
+
+```text
+PASS tests/security.test.js
+  🛡️ Cybersecurity Vulnerability & Defensive Controls Test Suite
+    ✓ 1. Input Sanitization & Cross-Site Scripting (XSS) Prevention (4 tests)
+    ✓ 2. Buffer Overflow & Memory Exhaustion Handling (Web Payload DoS) (4 tests)
+    ✓ 3. Privilege Access Control (Vertical Privilege Escalation Defense) (2 tests)
+    ✓ 4. Injection Attacks & ReDoS Prevention (3 tests)
+    ✓ 5. Horizontal Privilege Escalation & IDOR Defense (2 tests)
+    ✓ 6. Output Validation & Sensitive Field Masking (1 test)
+
+Test Suites: 1 passed, 1 total
+Tests:       16 passed, 16 total
+```
+
+| Security Vector | Vulnerability Addressed | Defensive Mechanism |
+| :--- | :--- | :--- |
+| **XSS & Sanitization** | CWE-79 / Stored XSS | Recursive tag & event-handler strip (`sanitizeMiddleware`) |
+| **Buffer Overflow / DoS** | CWE-400 / Memory Exhaustion | 100kb payload ceiling + Zod bounded schemas (max 72 chars for bcrypt) |
+| **Privilege Escalation** | CWE-269 / Broken Access Control | Public registration whitelisting (blocks admin self-assignment) |
+| **ReDoS & Injection** | CWE-1333 / Catastrophic Backtracking | `escapeRegex()` query metacharacter neutralization |
+| **IDOR Defense** | CWE-639 / Broken Object Authorization | Object-level identity checks on property and visit updates |
+| **Data Masking** | CWE-209 / Information Leakage | Mongoose `toJSON` projection masking of `passwordHash` and `__v` |
 
 ---
 
