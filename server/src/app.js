@@ -79,6 +79,22 @@ app.use('/api/', apiLimiter);
 // API Documentation
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Root & API Welcome endpoint
+app.get(['/', '/api'], (req, res) => {
+  res.json({
+    success: true,
+    message: 'RoomNest Backend Production REST API is active',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      docs: '/api/docs',
+      properties: '/api/properties',
+      auth: '/api/auth'
+    },
+    frontend: 'https://roomnest.vercel.app'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
