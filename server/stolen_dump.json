@@ -1,0 +1,32 @@
+[
+  {
+    "id": "prop-101",
+    "title": "Luxury 2BHK Near KIIT University Campus 6",
+    "ownerName": "Subhashish Mohanty",
+    "ownerPhone": "enc:0ab89299f7035acf34e0932b:b4c6521961c41fc102cfe56954c440e6:cbb8555077d3ec1c109af364d60c0b",
+    "ownerAadhaar": "enc:be0b76054043adb9e10ec6c9:2a79d6403b42b3746bc2338d5ae9913c:52eb0ec24811c1880be1f3ef540c",
+    "exactAddress": "enc:163f19724a310177e946cf51:0b938d92c25e6c58810d81ce8066a821:a5768c2b65495ebca0a29ef91ebb546699aae4a6c64b396294bfba61b3b085fb315de226f27019b971e5b8e669cd45ba24b2a229708caf793bb1",
+    "monthlyRent": 14000,
+    "securityDeposit": 28000,
+    "verifiedStatus": "Verified Owner"
+  },
+  {
+    "id": "prop-102",
+    "title": "Executive Studio Apartment for Working Professionals",
+    "ownerName": "Priyanka Das",
+    "ownerPhone": "enc:0d6f49f2cb9578ca07f9a990:3035115e53acbd9b2c610dca6f65d463:f288ddd3e70a66be682259807990e5",
+    "ownerAadhaar": "enc:ee189bfd955fcbf42af3b8fb:32c27e96fae216e7ddd74fb9689de925:60314703c5313c9d9307a79f4f7d",
+    "exactAddress": "enc:e582de1140f193be36e1d32d:c2e57e239269d657537fbc32d2249fae:6ee4a90159680d5853a110136ef252930b3653902e69d666e5ddc736d217f724a9017a7a4f205b20d4304c92096a84ee81a472f6e7190886f144fad224a058a0",
+    "monthlyRent": 9500,
+    "securityDeposit": 19000,
+    "verifiedStatus": "Verified Owner"
+  },
+  {
+    "id": "CANARY-AUDIT-99",
+    "title": "Student PG near ITER Campus",
+    "ownerName": "RoomNest Security Sentinel",
+    "ownerPhone": "+91-99999-CANARY",
+    "isCanaryTrap": true,
+    "watermarkSignature": "f3e4dc91fb8807beb248c67e10eafe640b35ff28f2b219d0df0093300dbaf54e"
+  }
+]
