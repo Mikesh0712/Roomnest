@@ -102,3 +102,4 @@ export const verifyCanaryWatermark = (canaryRecord) => {
   // Verification against legitimate key
   return canaryRecord.watermarkSignature.length === 64;
 };
+

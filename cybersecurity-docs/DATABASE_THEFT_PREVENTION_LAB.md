@@ -118,3 +118,4 @@ Follow this 5-stage script when presenting to your professor:
 | **Tamper Resistance** | None | Cryptographic AEAD Authentication Tag |
 | **Forensic Theft Proof** | Difficult to prove in court | **HMAC-SHA256 Canary Signature** |
 | **Compliance** | Violates DPDP Act 2023 | Aligned with Zero-Knowledge Encryption Standards |
+

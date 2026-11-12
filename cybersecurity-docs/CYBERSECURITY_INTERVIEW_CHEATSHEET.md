@@ -217,3 +217,4 @@
 * **🗣️ Screen dekh kar kya bolna hai (Hinglish):**
   > *"Sir, kisi bhi security claim ko prove karne ka industry-standard tareeqa **Automated Regression Testing** hota hai. Maine Jest me `server/tests/security.test.js` likha hai jisme 16 automated penetration tests hain. Hum specific attack vectors pass karte hain—jaise 73-char password, `<script>` tags, admin role injection, aur IDOR attack. Agar aap permit karein toh main abhi terminal me **`npm run test:security`** run karke dikha sakta hoon, jahan saare 16 tests green pass hote hain."*
 * **🎯 Proof Standard:** Automated AppSec Verification & Continuous Integration readiness.
+

@@ -17,13 +17,14 @@
 - **🌐 Live Web Application:** [https://roomnest.vercel.app](https://roomnest.vercel.app)
 - **⚡ Backend API Health:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
 - **📚 Interactive Swagger Docs:** [https://roomnest-m8uu.onrender.com/api/docs](https://roomnest-m8uu.onrender.com/api/docs)
-- **🛡️ Full AppSec Security Report:** [SECURITY.md](SECURITY.md)
+- **🛡️ Cybersecurity Knowledge Base & Lab Reports:** [cybersecurity-docs/](cybersecurity-docs/)
+- **📋 Interview 10-Question Cheatsheet:** [cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md](cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md)
 
 ---
 
 ## 🛡️ Cybersecurity & Defensive Architecture (OWASP Top 10)
 
-RoomNest incorporates an enterprise-grade **Application Security (AppSec)** layer with automated regression testing and defense-in-depth controls. Full threat modeling (STRIDE) and CWE mappings are documented in [SECURITY.md](SECURITY.md).
+RoomNest incorporates an enterprise-grade **Application Security (AppSec)** layer with automated regression testing, cryptographic field encryption, and defense-in-depth controls. Full threat modeling (STRIDE) and CWE mappings are documented in [cybersecurity-docs/SECURITY.md](cybersecurity-docs/SECURITY.md).
 
 ### 🧪 Run Automated Security Test Suite (16/16 Passing)
 To verify all defensive controls against XSS, Buffer/Payload DoS, Privilege Escalation, ReDoS, and IDOR:
@@ -55,6 +56,47 @@ Tests:       16 passed, 16 total
 | **ReDoS & Injection** | CWE-1333 / Catastrophic Backtracking | `escapeRegex()` query metacharacter neutralization |
 | **IDOR Defense** | CWE-639 / Broken Object Authorization | Object-level identity checks on property and visit updates |
 | **Data Masking** | CWE-209 / Information Leakage | Mongoose `toJSON` projection masking of `passwordHash` and `__v` |
+
+---
+
+## ⚔️ Database Breach & Business Model Theft Mitigation (Live Demonstration)
+
+> **Research Problem:** If an attacker or rogue competitor steals our raw database dump (`mongodump` / JSON export), can they launch a clone website overnight with our pre-fed listings?  
+> **Solution:** **Application-Level Envelope Encryption (AES-256-GCM)** + **KMS Vault Key Separation** + **Digital Canary Watermarking**. Full lab report available in [cybersecurity-docs/DATABASE_THEFT_PREVENTION_LAB.md](cybersecurity-docs/DATABASE_THEFT_PREVENTION_LAB.md).
+
+### 🎬 How to Perform the Live Step-by-Step Demonstration:
+
+#### Option A: The Live Attacker vs Legitimate Developer Roleplay (2 Commands)
+```bash
+# Step 1: Open the stolen database dump file to show encrypted fields:
+# File: server/stolen_dump.json -> Notice 'enc:iv:authTag:ciphertext'
+
+# Step 2: Run the Attacker tool (Simulates competitor trying to decrypt without key):
+node server/attacker_tool.js
+# ❌ Result: CRITICAL ERROR: Decryption Failed (AEAD Tag Mismatch). Clone website crashes!
+
+# Step 3: Run the Legitimate Developer tool (Authorized backend with Master Vault Key):
+node server/legitimate_reader.js
+# ✅ Result: Cleanly decrypts listings and catches digital canary trap watermark!
+```
+
+#### Option B: Full Interactive 5-Stage Simulation (Single Command)
+```bash
+cd server
+npm run demo:theft
+```
+*Executes all 5 stages: Vulnerability Assessment ➔ Encryption Mitigation ➔ Attacker Clone Crash ➔ Forensic Canary Token Audit ➔ Authorized Tenant View.*
+
+---
+
+## 📁 Centralized Cybersecurity Documentation Kit
+
+All security audit documentation, viva presentation guides, and interview prep files are organized in the [`cybersecurity-docs/`](cybersecurity-docs/) folder:
+
+- **[`DATABASE_THEFT_PREVENTION_LAB.md`](cybersecurity-docs/DATABASE_THEFT_PREVENTION_LAB.md)**: In-depth lab writeup on database theft, KMS envelope encryption, and canary honeypots.
+- **[`CYBERSECURITY_INTERVIEW_CHEATSHEET.md`](cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md)**: Top 10 interview questions with exact files, code snippets, and spoken Hinglish dialogue.
+- **[`SECURITY.md`](cybersecurity-docs/SECURITY.md)**: Enterprise AppSec report aligned with OWASP Top 10, NIST, and STRIDE threat modeling.
+- **[`interview_questions_50.txt`](cybersecurity-docs/interview_questions_50.txt)** & **[`interview_answers_50.txt`](cybersecurity-docs/interview_answers_50.txt)**: 50 Full-Stack & SDE interview questions with answers.
 
 ---
 
