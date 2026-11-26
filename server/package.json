@@ -11,7 +11,8 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit",
     "test:security": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/security.test.js --forceExit",
     "demo:theft": "node scripts/simulate-db-theft-demo.js",
-    "simulate:attacks": "node scripts/attack-simulator.js"
+    "simulate:attacks": "node ../security-sandbox-lab/sandbox.js",
+    "sandbox": "node ../security-sandbox-lab/sandbox.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

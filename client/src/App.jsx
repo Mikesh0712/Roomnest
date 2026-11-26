@@ -15,7 +15,6 @@ import { ComparisonModal } from './components/comparison/ComparisonModal';
 import { DashboardManager } from './components/dashboard/DashboardManager';
 import { AuthModal } from './components/common/AuthModal';
 import { CostCalculator } from './components/home/CostCalculator';
-import { SecurityLab } from './components/security/SecurityLab';
 import { Sparkles, MapPin, Shield, Wifi, Truck, Coffee, Home, Layers, Users, CheckSquare, X, ArrowRight } from 'lucide-react';
 
 const MainContent = () => {
@@ -212,7 +211,6 @@ const MainContent = () => {
         {activeTab === 'community' && <TenantForum />}
         {activeTab === 'relocation' && <RelocationHub />}
         {activeTab === 'dashboard' && <DashboardManager />}
-        {activeTab === 'security-lab' && <SecurityLab />}
 
       </main>
 

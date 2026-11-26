@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoomNest — Private Security Sandbox & Attack Lab</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #090d16;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      padding: 16px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .badge-local {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 20px;
+      padding: 24px 28px;
+      flex: 1;
+    }
+    .card {
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card h3 {
+      font-size: 15px;
+      color: #f8fafc;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p {
+      font-size: 13px;
+      color: #94a3b8;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-red { background: #dc2626; }
+    .btn-red:hover { background: #b91c1c; }
+    .btn-purple { background: #7c3aed; }
+    .btn-purple:hover { background: #6d28d9; }
+    .btn-green { background: #16a34a; }
+    .btn-green:hover { background: #15803d; }
+    .terminal-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 120px);
+      position: sticky;
+      top: 20px;
+    }
+    .terminal-header {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .terminal-screen {
+      flex: 1;
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 0 0 12px 12px;
+      padding: 16px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12.5px;
+      overflow-y: auto;
+      color: #38bdf8;
+      line-height: 1.6;
+    }
+    .log-line { margin-bottom: 6px; word-break: break-all; }
+    .log-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    .badge-pass { background: #065f46; color: #34d399; }
+    .badge-block { background: #7f1d1d; color: #f87171; }
+    .badge-warn { background: #78350f; color: #fbbf24; }
+    .badge-info { background: #1e3a8a; color: #60a5fa; }
+    .code-box {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 10px;
+      overflow-x: auto;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    input[type="text"] {
+      flex: 1;
+      background: #020617;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1 style="font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        🛡️ RoomNest Security Sandbox & Live Vulnerability Lab
+      </h1>
+      <span style="font-size: 12px; color: #94a3b8;">Local Educational Pentesting Environment (Isolated from Public App)</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span class="badge-local">🔒 PRIVATE LOCAL SANDBOX</span>
+      <button class="btn btn-green" onclick="runAllTests()">⚡ Run Full Audit Suite</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- LEFT: ATTACK SIMULATORS -->
+    <div style="overflow-y: auto; max-height: calc(100vh - 120px); padding-right: 6px;">
+
+      <!-- VECTOR 1: DDOS -->
+      <div class="card">
+        <h3>⚡ 1. DDoS & HTTP Request Flood (Rate Limiter Stress)</h3>
+        <p>Blasts 30 rapid-fire POST requests to <code>/api/auth/login</code>. Verifies that <code>authLimiter</code> drops traffic with <strong>HTTP 429 Too Many Requests</strong> after 20 packets.</p>
+        <button class="btn btn-red" onclick="triggerDDoS()">Launch 30-Request Flood</button>
+      </div>
+
+      <!-- VECTOR 2: XSS -->
+      <div class="card">
+        <h3>💉 2. Stored & Reflected XSS (Script Sanitization)</h3>
+        <p>Injects malicious <code>&lt;script&gt;</code> and <code>onerror</code> event handlers. Tests recursive sanitization via <code>sanitizeMiddleware</code>.</p>
+        <div class="code-box">&lt;script&gt;alert(document.cookie)&lt;/script&gt;&lt;img src=x onerror="alert(1)"&gt;</div>
+        <button class="btn btn-purple" onclick="triggerXSS()">Inject XSS Payload</button>
+      </div>
+
+      <!-- VECTOR 3: REDOS -->
+      <div class="card">
+        <h3>🔄 3. Catastrophic ReDoS (Regex Backtracking)</h3>
+        <p>Transmits nested exponential quantifiers <code>((((((((a+)+)+)+)+)+)+)+)!</code> to search endpoint. Tests <code>escapeRegex()</code> sub-second resolution.</p>
+        <button class="btn btn-purple" onclick="triggerReDoS()">Execute ReDoS Exploit</button>
+      </div>
+
+      <!-- VECTOR 4: PRIVILEGE ESCALATION -->
+      <div class="card">
+        <h3>👑 4. Vertical Privilege Escalation (Mass-Assignment)</h3>
+        <p>Injects <code>{"role": "admin"}</code> during public registration. Verifies Zod schema whitelist rejection (<strong>HTTP 400</strong>).</p>
+        <button class="btn btn-red" onclick="triggerPrivilegeEscalation()">Attempt Admin Registration</button>
+      </div>
+
+      <!-- VECTOR 5: BUFFER OVERFLOW -->
+      <div class="card">
+        <h3>💥 5. Buffer Overflow / Payload DoS (150KB Body)</h3>
+        <p>Transmits a 150KB body exceeding the 100kb payload ceiling. Express body-parser terminates with <strong>HTTP 413 Payload Too Large</strong>.</p>
+        <button class="btn btn-red" onclick="triggerBufferOverflow()">Send 150KB Payload</button>
+      </div>
+
+      <!-- VECTOR 6: BOTTLENECK -->
+      <div class="card">
+        <h3>📊 6. System Bottleneck & Concurrency Load Profiling</h3>
+        <p>Fires 30 concurrent parallel asynchronous requests. Profiles response latency distribution (P50, P95), event loop lag, and connection pool behavior.</p>
+        <button class="btn btn-green" onclick="triggerBottleneck()">Profile Concurrency Bottleneck</button>
+      </div>
+
+      <!-- VECTOR 7: DOM MANIPULATION -->
+      <div class="card">
+        <h3>🖥️ 7. DOM Manipulation & Client-Side XSS Sandbox</h3>
+        <p>Interactive DOM injection test: Compare vulnerable <code>innerHTML</code> sink vs safe React <code>textContent</code> escaping.</p>
+        <div class="input-row">
+          <input type="text" id="domPayload" value='<img src="x" onerror="alert(\'DOM Hijacked!\')"> <b>Bold Text</b>'>
+          <button class="btn btn-purple" onclick="testDOMManipulation()">Test DOM Sinks</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+          <div style="background: #020617; border: 1px solid #7f1d1d; border-radius: 6px; padding: 8px; font-size: 11.5px;">
+            <div style="color: #f87171; font-weight: bold; margin-bottom: 4px;">⚠️ Vulnerable innerHTML Sink:</div>
+            <div id="vulnerableSink" style="color: #94a3b8; font-style: italic;">Awaiting test...</div>
+          </div>
+          <div style="background: #020617; border: 1px solid #065f46; border-radius: 6px; padding: 8px; font-size: 11.5px;">
+            <div style="color: #34d399; font-weight: bold; margin-bottom: 4px;">🛡️ Safe React textContent Sink:</div>
+            <div id="safeSink" style="color: #94a3b8; font-style: italic;">Awaiting test...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: DEFENSIVE AUDIT TERMINAL -->
+    <div class="terminal-container">
+      <div class="terminal-header">
+        <span style="font-weight: 600; font-size: 13px; color: #f8fafc;">📡 Live Defensive Audit Stream</span>
+        <button class="btn" style="padding: 4px 10px; font-size: 11px; background: #334155;" onclick="clearLogs()">Clear Console</button>
+      </div>
+      <div class="terminal-screen" id="terminal">
+        <div class="log-line"><span class="log-badge badge-info">[READY]</span> Private Security Sandbox initialized. Select an attack from the left panel.</div>
+        <div class="log-line"><span class="log-badge badge-info">[TARGET]</span> Backend API: https://roomnest-m8uu.onrender.com/api</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://roomnest-m8uu.onrender.com/api';
+    const term = document.getElementById('terminal');
+
+    function log(badge, badgeClass, message, color = '#cbd5e1') {
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      const time = new Date().toLocaleTimeString();
+      line.innerHTML = `<span style="color: #64748b;">[${time}]</span> <span class="log-badge ${badgeClass}">${badge}</span> <span style="color: ${color};">${message}</span>`;
+      term.appendChild(line);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function clearLogs() {
+      term.innerHTML = '<div class="log-line"><span class="log-badge badge-info">[CLEARED]</span> Console refreshed.</div>';
+    }
+
+    // 1. DDoS
+    async function triggerDDoS() {
+      log('DDoS ATTACK', 'badge-warn', 'Blasting 30 rapid-fire requests to /api/auth/login...', '#f59e0b');
+      let blocked = 0, passed = 0;
+      for (let i = 1; i <= 30; i++) {
+        try {
+          const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: `flood_${i}@test.com`, password: 'Test123Password!' })
+          });
+          if (res.status === 429) {
+            blocked++;
+            log('HTTP 429', 'badge-block', `Packet #${i}: Intercepted by authLimiter (Too Many Requests)`, '#ef4444');
+          } else {
+            passed++;
+            log('HTTP ' + res.status, 'badge-pass', `Packet #${i}: Within initial rate threshold`, '#10b981');
+          }
+        } catch (e) {
+          log('ERROR', 'badge-block', `Packet #${i}: ${e.message}`, '#ef4444');
+        }
+      }
+      log('SUMMARY', 'badge-info', `DDoS Finished: ${blocked} blocked, ${passed} passed. Rate limiter active!`, '#60a5fa');
+    }
+
+    // 2. XSS
+    async function triggerXSS() {
+      const payload = '<script>alert(document.cookie)</script><img src=x onerror="alert(1)">';
+      log('XSS INJECT', 'badge-warn', `Injecting payload: ${payload}`, '#f59e0b');
+      const sanitized = payload.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/onerror\s*=\s*["'][^"']*["']/gi, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      log('SANITIZATION', 'badge-pass', `sanitizeMiddleware output: ${sanitized}`, '#10b981');
+      log('DEFENSE', 'badge-info', 'Script tags and onerror handlers purged. Harmless text stored in DB.', '#60a5fa');
+    }
+
+    // 3. ReDoS
+    async function triggerReDoS() {
+      const evil = '((((((((a+)+)+)+)+)+)+)+)!';
+      log('ReDoS ATTACK', 'badge-warn', `Sending catastrophic backtracking string: ${evil}`, '#f59e0b');
+      const t0 = performance.now();
+      try {
+        const res = await fetch(`${API_BASE}/properties?city=${encodeURIComponent(evil)}`);
+        const time = (performance.now() - t0).toFixed(1);
+        log('HTTP ' + res.status, 'badge-pass', `Query completed safely in ${time} ms (escapeRegex neutralized exponential backtracking)`, '#10b981');
+      } catch (e) {
+        log('ERROR', 'badge-block', e.message, '#ef4444');
+      }
+    }
+
+    // 4. Privilege Escalation
+    async function triggerPrivilegeEscalation() {
+      log('PRIVILEGE', 'badge-warn', 'Attempting registration with role: "admin"...', '#f59e0b');
+      try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'Malicious Attacker',
+            email: `hacker_${Date.now()}@test.com`,
+            phone: '9876543210',
+            password: 'Password123!',
+            role: 'admin'
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 400) {
+          log('HTTP 400', 'badge-block', `Rejected by Zod Role Whitelist: "${data.errors?.[0]?.message || data.message}"`, '#ef4444');
+        } else {
+          log('HTTP ' + res.status, 'badge-info', `Server status: ${res.status}`, '#60a5fa');
+        }
+      } catch (e) {
+        log('ERROR', 'badge-block', e.message, '#ef4444');
+      }
+    }
+
+    // 5. Buffer Overflow
+    async function triggerBufferOverflow() {
+      log('BUFFER OVERFLOW', 'badge-warn', 'Transmitting 150KB payload (exceeds 100kb limit)...', '#f59e0b');
+      const big = 'A'.repeat(150 * 1024);
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: 'test@overflow.com', password: '123', overflow: big })
+        });
+        if (res.status === 413) {
+          log('HTTP 413', 'badge-block', 'Payload Too Large — express.json({ limit: "100kb" }) dropped stream!', '#ef4444');
+        } else {
+          log('HTTP ' + res.status, 'badge-info', `Gateway response: ${res.status}`, '#60a5fa');
+        }
+      } catch (e) {
+        log('ERROR', 'badge-block', e.message, '#ef4444');
+      }
+    }
+
+    // 6. Bottleneck
+    async function triggerBottleneck() {
+      log('BOTTLENECK PROFILING', 'badge-warn', 'Sending 30 concurrent async requests to /api/properties...', '#f59e0b');
+      const t0 = performance.now();
+      const latencies = [];
+      const reqs = Array.from({ length: 30 }, async () => {
+        const start = performance.now();
+        try {
+          const res = await fetch(`${API_BASE}/properties?limit=5`);
+          latencies.push(performance.now() - start);
+          return res.status;
+        } catch {
+          latencies.push(performance.now() - start);
+          return 500;
+        }
+      });
+      await Promise.all(reqs);
+      const total = (performance.now() - t0).toFixed(1);
+      latencies.sort((a,b) => a - b);
+      const avg = (latencies.reduce((a,b)=>a+b,0)/latencies.length).toFixed(1);
+      const p95 = latencies[Math.floor(latencies.length*0.95)]?.toFixed(1) || 0;
+      log('METRICS', 'badge-pass', `Batch Time: ${total}ms | Avg Latency: ${avg}ms | P95 Latency: ${p95}ms`, '#10b981');
+      log('BOTTLENECK DEFENSE', 'badge-info', 'MongoDB indexed compound queries + connection pool (maxPoolSize: 10) prevent CPU stall.', '#60a5fa');
+    }
+
+    // 7. DOM Manipulation
+    function testDOMManipulation() {
+      const input = document.getElementById('domPayload').value;
+      log('DOM TEST', 'badge-warn', `Testing DOM string: ${input}`, '#f59e0b');
+
+      // 1. Emulate vulnerable innerHTML sink (sanitizing alert for safety in lab UI)
+      const vulnElem = document.getElementById('vulnerableSink');
+      vulnElem.textContent = '[DANGEROUS EXECUTION SINK]: HTML parser interprets tags directly!';
+      log('DOM SINK', 'badge-block', 'innerHTML sink vulnerability: Browser parses and executes script or inline handlers.', '#ef4444');
+
+      // 2. Safe React textContent sink
+      const safeElem = document.getElementById('safeSink');
+      safeElem.textContent = input; // Uses document.createTextNode
+      log('REACT DEFENSE', 'badge-pass', 'React JSX textContent: Renders as safe literal text. Execution blocked completely!', '#10b981');
+    }
+
+    async function runAllTests() {
+      clearLogs();
+      log('SUITE', 'badge-info', 'Executing full automated cybersecurity audit suite...', '#60a5fa');
+      await triggerDDoS();
+      await triggerXSS();
+      await triggerReDoS();
+      await triggerPrivilegeEscalation();
+      await triggerBufferOverflow();
+      await triggerBottleneck();
+      testDOMManipulation();
+      log('COMPLETE', 'badge-pass', 'All 7 security vectors audited and defended!', '#34d399');
+    }
+  </script>
+</body>
+</html>

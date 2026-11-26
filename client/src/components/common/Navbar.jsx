@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { MapPin, Heart, User, Truck, Home, Layers, ChevronDown, Sun, Moon, LogOut, Users, Globe, Menu, X, ShieldAlert } from 'lucide-react';
+import { MapPin, Heart, User, Truck, Home, Layers, ChevronDown, Sun, Moon, LogOut, Users, Globe, Menu, X } from 'lucide-react';
 
 export const Navbar = () => {
   const {
@@ -55,10 +55,6 @@ export const Navbar = () => {
           <button className={`rn-nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => handleNavClick('dashboard')} id="nav-dashboard">
             <Layers size={14} /> {t('navDashboard')}
-          </button>
-          <button className={`rn-nav-tab ${activeTab === 'security-lab' ? 'active' : ''}`}
-            onClick={() => handleNavClick('security-lab')} id="nav-security-lab" style={{ color: activeTab === 'security-lab' ? '#ef4444' : undefined }}>
-            <ShieldAlert size={14} color="#ef4444" /> Security Lab
           </button>
         </nav>
 
@@ -170,13 +166,6 @@ export const Navbar = () => {
                   onClick={() => handleNavClick('dashboard')}
                 >
                   <Layers size={16} /> {t('navDashboard')}
-                </button>
-                <button
-                  className={`rn-mobile-drawer-link ${activeTab === 'security-lab' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('security-lab')}
-                  style={{ color: '#ef4444' }}
-                >
-                  <ShieldAlert size={16} color="#ef4444" /> Security Lab
                 </button>
               </div>
             </div>

@@ -27,15 +27,18 @@ Welcome to the centralized cybersecurity documentation, audit reports, threat mi
 ## ⚡ Quick Test Commands (Run from `server` folder):
 
 ```bash
-# 1. Live Attack Simulator Arena (CLI): Tests DDoS, XSS, ReDoS, Privilege Escalation, Buffer Overflow
-npm run simulate:attacks
+# 1. Run the Private Local Security Sandbox (Interactive Terminal):
+npm run sandbox
+# Or: node ../security-sandbox-lab/sandbox.js
 
 # Or test individual attack vectors:
-node scripts/attack-simulator.js ddos
-node scripts/attack-simulator.js xss
-node scripts/attack-simulator.js redos
-node scripts/attack-simulator.js privilege
-node scripts/attack-simulator.js buffer
+node ../security-sandbox-lab/sandbox.js ddos        # 30-request flood & 429 Rate Limit
+node ../security-sandbox-lab/sandbox.js xss         # Input sanitization & XSS
+node ../security-sandbox-lab/sandbox.js redos       # Catastrophic regex backtracking
+node ../security-sandbox-lab/sandbox.js privilege   # Role whitelist rejection (400)
+node ../security-sandbox-lab/sandbox.js buffer      # 150KB body parser ceiling (413)
+node ../security-sandbox-lab/sandbox.js bottleneck  # Concurrency bottleneck profiling
+node ../security-sandbox-lab/sandbox.js dom         # DOM manipulation & React/CSP audit
 
 # 2. Run the 16-test Automated Security Suite (OWASP Top 10)
 npm run test:security
@@ -52,16 +55,9 @@ node legitimate_reader.js
 
 ---
 
-## 🌐 Interactive Web Security Lab (UI Arena)
+## 🔒 Private Local Security Sandbox (GUI & Terminal)
 
-You can also trigger and visualize every attack live in the web browser:
-1. Open [https://roomnest.vercel.app](https://roomnest.vercel.app) (or `http://localhost:5173`).
-2. Click the **"Security Lab"** tab in the top navigation bar (marked with a red Shield Alert icon `🛡️`).
-3. Click any attack button:
-   - **Launch HTTP Flood (DDoS)**: Sends rapid requests and triggers live HTTP 429 warnings.
-   - **Inject Stored XSS**: Demonstrates recursive script tag and event handler stripping.
-   - **Execute ReDoS Attack**: Demonstrates catastrophic regex query neutralization.
-   - **Attempt Privilege Escalation**: Demonstrates role whitelist rejection of `admin`.
-   - **Send 150KB Buffer Overflow**: Demonstrates `100kb` body parser truncation and HTTP 413.
-4. Watch the real-time **Defensive Audit Log** terminal update instantly on the right side of the screen.
+Detailed in [`security-sandbox-lab/README.md`](../security-sandbox-lab/README.md):
+- **Terminal CLI:** `node security-sandbox-lab/sandbox.js` (Interactive prompt with colorized audit logs).
+- **Offline HTML GUI:** Double-click `security-sandbox-lab/local-ui.html` to run attacks and bottleneck analysis in your local browser without deploying internal tools to the public website.
 

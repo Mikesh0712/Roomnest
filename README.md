@@ -15,44 +15,41 @@
 ## 🔗 Live Showcase Links
 
 - **🌐 Live Web Application:** [https://roomnest.vercel.app](https://roomnest.vercel.app)
-- **🛡️ Interactive Live Security Lab:** [https://roomnest.vercel.app](https://roomnest.vercel.app) *(Click "Security Lab" tab in navbar)*
 - **⚡ Backend API Health:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
 - **📚 Interactive Swagger Docs:** [https://roomnest-m8uu.onrender.com/api/docs](https://roomnest-m8uu.onrender.com/api/docs)
 - **🛡️ Cybersecurity Knowledge Base & Lab Reports:** [cybersecurity-docs/](cybersecurity-docs/)
+- **🔒 Private Local Security Sandbox & Lab:** [security-sandbox-lab/](security-sandbox-lab/)
 - **📋 Interview 10-Question Cheatsheet:** [cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md](cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md)
 
 ---
 
-## ⚡ Live Cybersecurity Attack & Defense Arena (Web UI & CLI)
+## 🔒 Private Local Security Testing Sandbox (Terminal CLI & Offline GUI)
 
-RoomNest includes a real-time, interactive **Attack & Defense Simulation Arena** designed for academic viva demonstrations and cybersecurity technical interviews. Anyone can simulate 5 real-world attack vectors and witness live defensive countermeasures blocking them.
+To maintain strict production security hygiene, internal vulnerability assessment and attack simulation tools are **kept private in an isolated local sandbox** ([`security-sandbox-lab/`](security-sandbox-lab/)) rather than exposed on the public website.
 
-### 🎮 Mode 1: Interactive Web Security Lab (In Browser)
-1. Open [https://roomnest.vercel.app](https://roomnest.vercel.app).
-2. Click the **"Security Lab"** tab in the top navigation bar.
-3. Launch live attacks with one click:
-   - **DDoS / HTTP Flood Attack**: Sends rapid-fire authentication requests until intercepted by `authLimiter` with **HTTP 429 Too Many Requests**.
-   - **Cross-Site Scripting (XSS)**: Injects `<script>alert(document.cookie)</script>` and inspects the live reactive output sanitized by `sanitizeMiddleware`.
-   - **Catastrophic ReDoS**: Fires nested exponential regex payloads and monitors sub-second query response via `escapeRegex()`.
-   - **Vertical Privilege Escalation**: Injects `role: "admin"` into public registration, triggering schema rejection (**HTTP 400**).
-   - **150KB Buffer Overflow**: Exceeds the 100kb payload ceiling to trigger **HTTP 413 Payload Too Large**.
-4. The live **Defensive Audit Log** streams execution events, HTTP status codes, and the defensive middleware that blocked the vector.
+This sandbox allows you to execute simulated attacks against live endpoints and observe real-time defensive interceptions, bottlenecks, and DOM protections.
 
-### 💻 Mode 2: Standalone CLI Attack Simulator (Terminal)
-Run from the `server` directory:
+### 🎮 How to Run the Private Sandbox:
+
+#### Option A: Interactive Terminal Sandbox
 ```bash
-cd server
+# Launch interactive numbered menu from root:
+node security-sandbox-lab/sandbox.js
 
-# Run all 5 attack vectors in sequence:
-npm run simulate:attacks
-
-# Or test individual vectors:
-node scripts/attack-simulator.js ddos       # Tests 30-request flood & 429 Rate Limit
-node scripts/attack-simulator.js xss        # Tests recursive tag stripping
-node scripts/attack-simulator.js redos      # Tests regex backtracking neutralization
-node scripts/attack-simulator.js privilege  # Tests admin role whitelist rejection
-node scripts/attack-simulator.js buffer     # Tests 150KB overflow & 413 Payload Too Large
+# Or run specific attack/profiling suites:
+node security-sandbox-lab/sandbox.js ddos        # 30-request flood & 429 Rate Limit
+node security-sandbox-lab/sandbox.js xss         # Stored & Reflected XSS sanitization
+node security-sandbox-lab/sandbox.js redos       # Catastrophic regex backtracking
+node security-sandbox-lab/sandbox.js privilege   # Role whitelist rejection (400)
+node security-sandbox-lab/sandbox.js buffer      # 150KB payload ceiling (413)
+node security-sandbox-lab/sandbox.js bottleneck  # Concurrency & Event-Loop profiling
+node security-sandbox-lab/sandbox.js dom         # DOM manipulation & React/CSP audit
+node security-sandbox-lab/sandbox.js all         # Run all 7 audits in sequence
 ```
+
+#### Option B: Standalone Local HTML Dashboard (Offline GUI)
+- Simply open [`security-sandbox-lab/local-ui.html`](security-sandbox-lab/local-ui.html) directly in your browser.
+- Provides interactive attack triggers, interactive DOM sink comparator (`innerHTML` vs React `textContent`), and a live reactive defensive audit log.
 
 ---
 
