@@ -117,3 +117,4 @@ DOM-based vulnerabilities occur on the client-side when untrusted data is writte
 | **5** | **Buffer Overflow / DoS** | `/api/auth/login` | CWE-400 (Memory Exhaustion) | `express.json({ limit: '100kb' })` | **HTTP 413** Payload Too Large |
 | **6** | **System Bottleneck** | `/api/properties` | Architecture / Event Loop Lag | Compound Indexes + MaxPoolSize 10 + Pagination Clamp | **High Throughput / Low Latency** |
 | **7** | **DOM Manipulation** | Client UI / React DOM | CWE-79 (Client-Side DOM XSS) | React `createTextNode` + Helmet Security Headers | **Text Escaping + CSP nosniff** |
+

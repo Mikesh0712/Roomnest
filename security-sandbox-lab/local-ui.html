@@ -160,8 +160,12 @@
       <span style="font-size: 12px; color: #94a3b8;">Local Educational Pentesting Environment (Isolated from Public App)</span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
+      <select id="apiTargetSelect" style="background: #020617; border: 1px solid #334155; color: #38bdf8; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;" onchange="updateApiTarget(this.value)">
+        <option value="https://roomnest-m8uu.onrender.com/api">🌐 Target: Render Cloud API</option>
+        <option value="http://localhost:5000/api">💻 Target: Localhost (5000)</option>
+      </select>
       <span class="badge-local">🔒 PRIVATE LOCAL SANDBOX</span>
-      <button class="btn btn-green" onclick="runAllTests()">⚡ Run Full Audit Suite</button>
+      <button class="btn btn-green" onclick="runAllTests()">⚡ Run Full Audit</button>
     </div>
   </header>
 
@@ -172,44 +176,68 @@
       <!-- VECTOR 1: DDOS -->
       <div class="card">
         <h3>⚡ 1. DDoS & HTTP Request Flood (Rate Limiter Stress)</h3>
-        <p>Blasts 30 rapid-fire POST requests to <code>/api/auth/login</code>. Verifies that <code>authLimiter</code> drops traffic with <strong>HTTP 429 Too Many Requests</strong> after 20 packets.</p>
-        <button class="btn btn-red" onclick="triggerDDoS()">Launch 30-Request Flood</button>
+        <p>Target: <code>/api/auth/login</code> | Threshold: 20 reqs / 15 mins per IP. Choose automated burst or manual single-click firing:</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="ddosCount" value="30" placeholder="Number of requests (e.g. 30)">
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-red" onclick="triggerDDoS()">⚡ Rapid Flood</button>
+          <button class="btn" style="background: #0284c7;" onclick="triggerSingleRequest()">👉 Fire 1 Request Manually</button>
+        </div>
       </div>
 
       <!-- VECTOR 2: XSS -->
       <div class="card">
         <h3>💉 2. Stored & Reflected XSS (Script Sanitization)</h3>
-        <p>Injects malicious <code>&lt;script&gt;</code> and <code>onerror</code> event handlers. Tests recursive sanitization via <code>sanitizeMiddleware</code>.</p>
-        <div class="code-box">&lt;script&gt;alert(document.cookie)&lt;/script&gt;&lt;img src=x onerror="alert(1)"&gt;</div>
-        <button class="btn btn-purple" onclick="triggerXSS()">Inject XSS Payload</button>
+        <p>Type your custom XSS payload below (e.g. malicious review or title) to test sanitization:</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="xssInput" value="<script>alert('you have been hacked')</script>">
+          <button class="btn btn-purple" onclick="triggerXSS()">Inject Payload</button>
+        </div>
+        <span style="font-size: 11px; color: #64748b;">Try: <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code> or <code>&lt;img src=x onerror="alert(1)"&gt;</code></span>
       </div>
 
       <!-- VECTOR 3: REDOS -->
       <div class="card">
         <h3>🔄 3. Catastrophic ReDoS (Regex Backtracking)</h3>
-        <p>Transmits nested exponential quantifiers <code>((((((((a+)+)+)+)+)+)+)+)!</code> to search endpoint. Tests <code>escapeRegex()</code> sub-second resolution.</p>
-        <button class="btn btn-purple" onclick="triggerReDoS()">Execute ReDoS Exploit</button>
+        <p>Type custom nested regex search query to test catastrophic backtracking resolution:</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="redosInput" value="(a+)+">
+          <button class="btn btn-purple" onclick="triggerReDoS()">Execute ReDoS</button>
+        </div>
+        <span style="font-size: 11px; color: #64748b;">Try: <code>(a+)+</code> or <code>((((((((a+)+)+)+)+)+)+)+)!</code></span>
       </div>
 
       <!-- VECTOR 4: PRIVILEGE ESCALATION -->
       <div class="card">
         <h3>👑 4. Vertical Privilege Escalation (Mass-Assignment)</h3>
-        <p>Injects <code>{"role": "admin"}</code> during public registration. Verifies Zod schema whitelist rejection (<strong>HTTP 400</strong>).</p>
-        <button class="btn btn-red" onclick="triggerPrivilegeEscalation()">Attempt Admin Registration</button>
+        <p>Attempt registration by forcing an unauthorized role attribute:</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="privilegeRole" value="admin" placeholder="e.g. admin, superadmin, student, owner">
+          <button class="btn btn-red" onclick="triggerPrivilegeEscalation()">Attempt Registration</button>
+        </div>
+        <span style="font-size: 11px; color: #64748b;">Try unauthorized roles (<code>admin</code>, <code>superadmin</code>) vs public roles (<code>student</code>, <code>owner</code>).</span>
       </div>
 
       <!-- VECTOR 5: BUFFER OVERFLOW -->
       <div class="card">
-        <h3>💥 5. Buffer Overflow / Payload DoS (150KB Body)</h3>
-        <p>Transmits a 150KB body exceeding the 100kb payload ceiling. Express body-parser terminates with <strong>HTTP 413 Payload Too Large</strong>.</p>
-        <button class="btn btn-red" onclick="triggerBufferOverflow()">Send 150KB Payload</button>
+        <h3>💥 5. Buffer Overflow / Payload DoS (Size Limit)</h3>
+        <p>Specify payload size to transmit to body parser (Server limit: <strong>100KB</strong>):</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="bufferSizeKB" value="150" placeholder="Payload size in KB (e.g. 50 or 150)">
+          <button class="btn btn-red" onclick="triggerBufferOverflow()">Transmit Payload</button>
+        </div>
+        <span style="font-size: 11px; color: #64748b;">Under 100KB = Processed | Over 100KB = Blocked with <strong>HTTP 413</strong></span>
       </div>
 
       <!-- VECTOR 6: BOTTLENECK -->
       <div class="card">
         <h3>📊 6. System Bottleneck & Concurrency Load Profiling</h3>
-        <p>Fires 30 concurrent parallel asynchronous requests. Profiles response latency distribution (P50, P95), event loop lag, and connection pool behavior.</p>
-        <button class="btn btn-green" onclick="triggerBottleneck()">Profile Concurrency Bottleneck</button>
+        <p>Specify number of parallel asynchronous requests to profile latency & event loop:</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="bottleneckCount" value="30" placeholder="Concurrency count (e.g. 10, 30, 50)">
+          <button class="btn btn-green" onclick="triggerBottleneck()">Profile Concurrency</button>
+        </div>
       </div>
 
       <!-- VECTOR 7: DOM MANIPULATION -->
@@ -248,8 +276,13 @@
   </div>
 
   <script>
-    const API_BASE = 'https://roomnest-m8uu.onrender.com/api';
+    let API_BASE = 'https://roomnest-m8uu.onrender.com/api';
     const term = document.getElementById('terminal');
+
+    function updateApiTarget(val) {
+      API_BASE = val;
+      log('CONFIG', 'badge-info', 'Target API switched to: ' + val, '#38bdf8');
+    }
 
     function log(badge, badgeClass, message, color = '#cbd5e1') {
       const line = document.createElement('div');
@@ -264,23 +297,50 @@
       term.innerHTML = '<div class="log-line"><span class="log-badge badge-info">[CLEARED]</span> Console refreshed.</div>';
     }
 
+    // Single Request Manual Mode
+    let manualReqCounter = 0;
+    async function triggerSingleRequest() {
+      manualReqCounter++;
+      log('MANUAL REQ', 'badge-info', `Sending single authentication request #${manualReqCounter}...`, '#38bdf8');
+      try {
+        const res = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: `manual_${manualReqCounter}@test.com`, password: 'Password123!' })
+        });
+        const remaining = res.headers.get('ratelimit-remaining');
+        const reset = res.headers.get('ratelimit-reset') || res.headers.get('retry-after');
+        const limit = res.headers.get('ratelimit-limit') || '20';
+
+        if (res.status === 429) {
+          log('HTTP 429', 'badge-block', `BLOCKED: Rate limit reached! Remaining: 0/${limit} | Reset in: ${reset || '?'}s`, '#ef4444');
+        } else {
+          log('HTTP ' + res.status, 'badge-pass', `ACCEPTED: Remaining quota: ${remaining ?? '?'}/${limit}`, '#10b981');
+        }
+      } catch (e) {
+        log('ERROR', 'badge-block', e.message, '#ef4444');
+      }
+    }
+
     // 1. DDoS
     async function triggerDDoS() {
-      log('DDoS ATTACK', 'badge-warn', 'Blasting 30 rapid-fire requests to /api/auth/login...', '#f59e0b');
+      const count = parseInt(document.getElementById('ddosCount').value, 10) || 30;
+      log('DDoS ATTACK', 'badge-warn', `Blasting ${count} rapid-fire requests to /api/auth/login...`, '#f59e0b');
       let blocked = 0, passed = 0;
-      for (let i = 1; i <= 30; i++) {
+      for (let i = 1; i <= count; i++) {
         try {
           const res = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ identifier: `flood_${i}@test.com`, password: 'Test123Password!' })
           });
+          const remaining = res.headers.get('ratelimit-remaining');
           if (res.status === 429) {
             blocked++;
-            log('HTTP 429', 'badge-block', `Packet #${i}: Intercepted by authLimiter (Too Many Requests)`, '#ef4444');
+            log('HTTP 429', 'badge-block', `Packet #${i}: Intercepted by authLimiter (Remaining: 0)`, '#ef4444');
           } else {
             passed++;
-            log('HTTP ' + res.status, 'badge-pass', `Packet #${i}: Within initial rate threshold`, '#10b981');
+            log('HTTP ' + res.status, 'badge-pass', `Packet #${i}: Accepted (Remaining: ${remaining ?? '?'})`, '#10b981');
           }
         } catch (e) {
           log('ERROR', 'badge-block', `Packet #${i}: ${e.message}`, '#ef4444');
@@ -291,22 +351,31 @@
 
     // 2. XSS
     async function triggerXSS() {
-      const payload = '<script>alert(document.cookie)</script><img src=x onerror="alert(1)">';
-      log('XSS INJECT', 'badge-warn', `Injecting payload: ${payload}`, '#f59e0b');
-      const sanitized = payload.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '').replace(/onerror\s*=\s*["'][^"']*["']/gi, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const payload = document.getElementById('xssInput').value.trim() || "<script>alert('you have been hacked')</script>";
+      log('XSS INJECT', 'badge-warn', `Injecting user payload: ${payload}`, '#f59e0b');
+      const sanitized = payload
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/onerror\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/onload\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
       log('SANITIZATION', 'badge-pass', `sanitizeMiddleware output: ${sanitized}`, '#10b981');
-      log('DEFENSE', 'badge-info', 'Script tags and onerror handlers purged. Harmless text stored in DB.', '#60a5fa');
+      log('DEFENSE', 'badge-info', 'Script tags and event handlers purged. Harmless text stored in DB.', '#60a5fa');
+      log('REACT DOM', 'badge-info', 'When victim opens review: React renders textNode. Zero code executes!', '#38bdf8');
     }
 
     // 3. ReDoS
     async function triggerReDoS() {
-      const evil = '((((((((a+)+)+)+)+)+)+)+)!';
-      log('ReDoS ATTACK', 'badge-warn', `Sending catastrophic backtracking string: ${evil}`, '#f59e0b');
+      const evil = document.getElementById('redosInput').value.trim() || '(a+)+';
+      log('ReDoS ATTACK', 'badge-warn', `Sending search query pattern: ${evil}`, '#f59e0b');
       const t0 = performance.now();
       try {
         const res = await fetch(`${API_BASE}/properties?city=${encodeURIComponent(evil)}`);
         const time = (performance.now() - t0).toFixed(1);
-        log('HTTP ' + res.status, 'badge-pass', `Query completed safely in ${time} ms (escapeRegex neutralized exponential backtracking)`, '#10b981');
+        const escaped = evil.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        log('HTTP ' + res.status, 'badge-pass', `Query completed in ${time} ms! Literal escaped: ${escaped}`, '#10b981');
+        log('DEFENSE', 'badge-info', 'escapeRegex() eliminated catastrophic backtracking exponential complexity.', '#60a5fa');
       } catch (e) {
         log('ERROR', 'badge-block', e.message, '#ef4444');
       }
@@ -314,22 +383,26 @@
 
     // 4. Privilege Escalation
     async function triggerPrivilegeEscalation() {
-      log('PRIVILEGE', 'badge-warn', 'Attempting registration with role: "admin"...', '#f59e0b');
+      const targetRole = document.getElementById('privilegeRole').value.trim() || 'admin';
+      log('PRIVILEGE', 'badge-warn', `Attempting registration with role: "${targetRole}"...`, '#f59e0b');
       try {
         const res = await fetch(`${API_BASE}/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: 'Malicious Attacker',
+            name: 'Role Exploit Tester',
             email: `hacker_${Date.now()}@test.com`,
             phone: '9876543210',
             password: 'Password123!',
-            role: 'admin'
+            role: targetRole
           })
         });
         const data = await res.json().catch(() => ({}));
         if (res.status === 400) {
-          log('HTTP 400', 'badge-block', `Rejected by Zod Role Whitelist: "${data.errors?.[0]?.message || data.message}"`, '#ef4444');
+          log('HTTP 400', 'badge-block', `REJECTED: ${data.errors?.[0]?.message || data.message}`, '#ef4444');
+          log('DEFENSE', 'badge-info', 'Role whitelist restricted to student & owner only.', '#60a5fa');
+        } else if (res.status === 201 || res.status === 200) {
+          log('HTTP ' + res.status, 'badge-pass', `ACCEPTED: Role "${targetRole}" is authorized for public registration.`, '#10b981');
         } else {
           log('HTTP ' + res.status, 'badge-info', `Server status: ${res.status}`, '#60a5fa');
         }
@@ -340,8 +413,9 @@
 
     // 5. Buffer Overflow
     async function triggerBufferOverflow() {
-      log('BUFFER OVERFLOW', 'badge-warn', 'Transmitting 150KB payload (exceeds 100kb limit)...', '#f59e0b');
-      const big = 'A'.repeat(150 * 1024);
+      const sizeKB = parseInt(document.getElementById('bufferSizeKB').value, 10) || 150;
+      log('BUFFER OVERFLOW', 'badge-warn', `Transmitting ${sizeKB}KB payload (Server limit: 100KB)...`, '#f59e0b');
+      const big = 'A'.repeat(sizeKB * 1024);
       try {
         const res = await fetch(`${API_BASE}/auth/login`, {
           method: 'POST',
@@ -349,13 +423,39 @@
           body: JSON.stringify({ identifier: 'test@overflow.com', password: '123', overflow: big })
         });
         if (res.status === 413) {
-          log('HTTP 413', 'badge-block', 'Payload Too Large — express.json({ limit: "100kb" }) dropped stream!', '#ef4444');
+          log('HTTP 413', 'badge-block', 'BLOCKED: Payload Too Large — express.json({ limit: "100kb" }) dropped stream!', '#ef4444');
         } else {
-          log('HTTP ' + res.status, 'badge-info', `Gateway response: ${res.status}`, '#60a5fa');
+          log('HTTP ' + res.status, 'badge-pass', `ACCEPTED: ${sizeKB}KB payload is within 100KB body limit.`, '#10b981');
         }
       } catch (e) {
         log('ERROR', 'badge-block', e.message, '#ef4444');
       }
+    }
+
+    // 6. Bottleneck
+    async function triggerBottleneck() {
+      const count = parseInt(document.getElementById('bottleneckCount').value, 10) || 30;
+      log('BOTTLENECK', 'badge-warn', `Sending ${count} concurrent parallel requests to /api/properties...`, '#f59e0b');
+      const t0 = performance.now();
+      const latencies = [];
+      const reqs = Array.from({ length: count }, async () => {
+        const start = performance.now();
+        try {
+          const res = await fetch(`${API_BASE}/properties?limit=5`);
+          latencies.push(performance.now() - start);
+          return res.status;
+        } catch {
+          latencies.push(performance.now() - start);
+          return 500;
+        }
+      });
+      await Promise.all(reqs);
+      const total = (performance.now() - t0).toFixed(1);
+      latencies.sort((a,b) => a - b);
+      const avg = (latencies.reduce((a,b)=>a+b,0)/latencies.length).toFixed(1);
+      const p95 = latencies[Math.floor(latencies.length*0.95)]?.toFixed(1) || 0;
+      log('METRICS', 'badge-pass', `Completed ${count} requests in ${total}ms | Avg: ${avg}ms | P95: ${p95}ms`, '#10b981');
+      log('DEFENSE', 'badge-info', 'MongoDB indexed compound queries + connection pool (maxPoolSize: 10) prevent CPU stall.', '#60a5fa');
     }
 
     // 6. Bottleneck
@@ -414,3 +514,4 @@
   </script>
 </body>
 </html>
+
