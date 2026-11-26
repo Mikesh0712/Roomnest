@@ -27,15 +27,41 @@ Welcome to the centralized cybersecurity documentation, audit reports, threat mi
 ## ⚡ Quick Test Commands (Run from `server` folder):
 
 ```bash
-# 1. Run the 16-test Automated Security Suite (OWASP Top 10)
+# 1. Live Attack Simulator Arena (CLI): Tests DDoS, XSS, ReDoS, Privilege Escalation, Buffer Overflow
+npm run simulate:attacks
+
+# Or test individual attack vectors:
+node scripts/attack-simulator.js ddos
+node scripts/attack-simulator.js xss
+node scripts/attack-simulator.js redos
+node scripts/attack-simulator.js privilege
+node scripts/attack-simulator.js buffer
+
+# 2. Run the 16-test Automated Security Suite (OWASP Top 10)
 npm run test:security
 
-# 2. Run the Database Theft & Attack Mitigation Simulation (Professor Lab)
+# 3. Run the Database Theft & Attack Mitigation Simulation (Professor Lab)
 npm run demo:theft
 
-# 3. Simulate Attacker attempting to crack stolen database dump
+# 4. Simulate Attacker attempting to crack stolen database dump
 node attacker_tool.js
 
-# 4. Simulate Legitimate Developer decrypting database dump with Vault Key
+# 5. Simulate Legitimate Developer decrypting database dump with Vault Key
 node legitimate_reader.js
 ```
+
+---
+
+## 🌐 Interactive Web Security Lab (UI Arena)
+
+You can also trigger and visualize every attack live in the web browser:
+1. Open [https://roomnest.vercel.app](https://roomnest.vercel.app) (or `http://localhost:5173`).
+2. Click the **"Security Lab"** tab in the top navigation bar (marked with a red Shield Alert icon `🛡️`).
+3. Click any attack button:
+   - **Launch HTTP Flood (DDoS)**: Sends rapid requests and triggers live HTTP 429 warnings.
+   - **Inject Stored XSS**: Demonstrates recursive script tag and event handler stripping.
+   - **Execute ReDoS Attack**: Demonstrates catastrophic regex query neutralization.
+   - **Attempt Privilege Escalation**: Demonstrates role whitelist rejection of `admin`.
+   - **Send 150KB Buffer Overflow**: Demonstrates `100kb` body parser truncation and HTTP 413.
+4. Watch the real-time **Defensive Audit Log** terminal update instantly on the right side of the screen.
+

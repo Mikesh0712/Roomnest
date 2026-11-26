@@ -10,7 +10,8 @@
     "seed": "node data/seed.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --forceExit",
     "test:security": "node --experimental-vm-modules node_modules/jest/bin/jest.js tests/security.test.js --forceExit",
-    "demo:theft": "node scripts/simulate-db-theft-demo.js"
+    "demo:theft": "node scripts/simulate-db-theft-demo.js",
+    "simulate:attacks": "node scripts/attack-simulator.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

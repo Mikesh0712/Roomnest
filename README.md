@@ -15,10 +15,44 @@
 ## 🔗 Live Showcase Links
 
 - **🌐 Live Web Application:** [https://roomnest.vercel.app](https://roomnest.vercel.app)
+- **🛡️ Interactive Live Security Lab:** [https://roomnest.vercel.app](https://roomnest.vercel.app) *(Click "Security Lab" tab in navbar)*
 - **⚡ Backend API Health:** [https://roomnest-m8uu.onrender.com/api/health](https://roomnest-m8uu.onrender.com/api/health)
 - **📚 Interactive Swagger Docs:** [https://roomnest-m8uu.onrender.com/api/docs](https://roomnest-m8uu.onrender.com/api/docs)
 - **🛡️ Cybersecurity Knowledge Base & Lab Reports:** [cybersecurity-docs/](cybersecurity-docs/)
 - **📋 Interview 10-Question Cheatsheet:** [cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md](cybersecurity-docs/CYBERSECURITY_INTERVIEW_CHEATSHEET.md)
+
+---
+
+## ⚡ Live Cybersecurity Attack & Defense Arena (Web UI & CLI)
+
+RoomNest includes a real-time, interactive **Attack & Defense Simulation Arena** designed for academic viva demonstrations and cybersecurity technical interviews. Anyone can simulate 5 real-world attack vectors and witness live defensive countermeasures blocking them.
+
+### 🎮 Mode 1: Interactive Web Security Lab (In Browser)
+1. Open [https://roomnest.vercel.app](https://roomnest.vercel.app).
+2. Click the **"Security Lab"** tab in the top navigation bar.
+3. Launch live attacks with one click:
+   - **DDoS / HTTP Flood Attack**: Sends rapid-fire authentication requests until intercepted by `authLimiter` with **HTTP 429 Too Many Requests**.
+   - **Cross-Site Scripting (XSS)**: Injects `<script>alert(document.cookie)</script>` and inspects the live reactive output sanitized by `sanitizeMiddleware`.
+   - **Catastrophic ReDoS**: Fires nested exponential regex payloads and monitors sub-second query response via `escapeRegex()`.
+   - **Vertical Privilege Escalation**: Injects `role: "admin"` into public registration, triggering schema rejection (**HTTP 400**).
+   - **150KB Buffer Overflow**: Exceeds the 100kb payload ceiling to trigger **HTTP 413 Payload Too Large**.
+4. The live **Defensive Audit Log** streams execution events, HTTP status codes, and the defensive middleware that blocked the vector.
+
+### 💻 Mode 2: Standalone CLI Attack Simulator (Terminal)
+Run from the `server` directory:
+```bash
+cd server
+
+# Run all 5 attack vectors in sequence:
+npm run simulate:attacks
+
+# Or test individual vectors:
+node scripts/attack-simulator.js ddos       # Tests 30-request flood & 429 Rate Limit
+node scripts/attack-simulator.js xss        # Tests recursive tag stripping
+node scripts/attack-simulator.js redos      # Tests regex backtracking neutralization
+node scripts/attack-simulator.js privilege  # Tests admin role whitelist rejection
+node scripts/attack-simulator.js buffer     # Tests 150KB overflow & 413 Payload Too Large
+```
 
 ---
 
