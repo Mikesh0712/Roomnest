@@ -191,7 +191,7 @@
         <h3>💉 2. Stored & Reflected XSS (Script Sanitization)</h3>
         <p>Type your custom XSS payload below (e.g. malicious review or title) to test sanitization:</p>
         <div class="input-row" style="margin-bottom: 8px;">
-          <input type="text" id="xssInput" value="<script>alert('you have been hacked')</script>">
+          <input type="text" id="xssInput" value="&lt;script&gt;alert(&#39;you have been hacked&#39;)&lt;/script&gt;">
           <button class="btn btn-purple" onclick="triggerXSS()">Inject Payload</button>
         </div>
         <span style="font-size: 11px; color: #64748b;">Try: <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code> or <code>&lt;img src=x onerror="alert(1)"&gt;</code></span>
@@ -245,7 +245,7 @@
         <h3>🖥️ 7. DOM Manipulation & Client-Side XSS Sandbox</h3>
         <p>Interactive DOM injection test: Compare vulnerable <code>innerHTML</code> sink vs safe React <code>textContent</code> escaping.</p>
         <div class="input-row">
-          <input type="text" id="domPayload" value='<img src="x" onerror="alert(\'DOM Hijacked!\')"> <b>Bold Text</b>'>
+          <input type="text" id="domPayload" value="&lt;img src=&quot;x&quot; onerror=&quot;alert(&#39;DOM Hijacked!&#39;)&quot;&gt; &lt;b&gt;Bold Text&lt;/b&gt;">
           <button class="btn btn-purple" onclick="testDOMManipulation()">Test DOM Sinks</button>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
@@ -367,9 +367,9 @@
 
     // 2. XSS
     async function triggerXSS() {
-      const payload = document.getElementById('xssInput').value.trim() || "<script>alert('you have been hacked')</script>";
+      const payload = document.getElementById('xssInput').value.trim() || ("<script>alert('you have been hacked')<" + "/script>");
       log('XSS INJECT', 'badge-warn', `Injecting user payload: ${payload}`, '#f59e0b');
-      const scriptRegex = new RegExp('<script\\b[\\s\\S]*?<\\/script>', 'gi');
+      const scriptRegex = new RegExp('<script\\b[\\s\\S]*?' + '<\\/script>', 'gi');
       const sanitized = payload
         .replace(scriptRegex, '')
         .replace(/onerror\s*=\s*["'][^"']*["']/gi, '')
