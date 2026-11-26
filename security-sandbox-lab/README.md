@@ -24,7 +24,8 @@ node security-sandbox-lab/sandbox.js privilege  # Test 4: Role whitelist rejecti
 node security-sandbox-lab/sandbox.js buffer     # Test 5: 150KB body parser ceiling (413)
 node security-sandbox-lab/sandbox.js bottleneck # Test 6: Concurrency bottleneck profiling
 node security-sandbox-lab/sandbox.js dom        # Test 7: DOM manipulation & React/CSP audit
-node security-sandbox-lab/sandbox.js all        # Run all 7 audits in sequence
+node security-sandbox-lab/sandbox.js db         # Test 8: Database theft & AES-256-GCM AEAD cracking
+node security-sandbox-lab/sandbox.js all        # Run all 8 audits in sequence
 ```
 
 ---
@@ -117,4 +118,5 @@ DOM-based vulnerabilities occur on the client-side when untrusted data is writte
 | **5** | **Buffer Overflow / DoS** | `/api/auth/login` | CWE-400 (Memory Exhaustion) | `express.json({ limit: '100kb' })` | **HTTP 413** Payload Too Large |
 | **6** | **System Bottleneck** | `/api/properties` | Architecture / Event Loop Lag | Compound Indexes + MaxPoolSize 10 + Pagination Clamp | **High Throughput / Low Latency** |
 | **7** | **DOM Manipulation** | Client UI / React DOM | CWE-79 (Client-Side DOM XSS) | React `createTextNode` + Helmet Security Headers | **Text Escaping + CSP nosniff** |
+| **8** | **Database Theft & Cracking** | `stolen_dump.json` | CWE-311 / CWE-312 (Data at Rest) | AES-256-GCM Envelope Encryption + KMS Vault Separation | **AEAD Tag Mismatch Crash** |
 

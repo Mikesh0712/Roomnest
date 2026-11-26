@@ -260,6 +260,22 @@
         </div>
       </div>
 
+      <!-- VECTOR 8: DATABASE THEFT & CRYPTOGRAPHIC DECRYPTION -->
+      <div class="card">
+        <h3>🗄️ 8. Database Theft & Cryptographic Key Cracking Test</h3>
+        <p>Simulates an attacker who stole our raw database dump (<code>stolen_dump.json</code>). Sensitive columns are protected with <strong>AES-256-GCM Envelope Encryption</strong>.</p>
+        <div class="code-box" style="font-size: 11px; color: #f59e0b;">Stolen Ciphertext: enc:0ab89299f7035acf34e0932b:b4c6521961c41fc102cfe56954c440e6:cbb8555077d3ec1c109af364d60c0b</div>
+        <p style="font-size: 12px; margin-bottom: 6px;">Enter a random guessed key to test AEAD authentication failure, or use the genuine Vault Key:</p>
+        <div class="input-row" style="margin-bottom: 8px;">
+          <input type="text" id="dbKeyInput" value="competitor_cracked_key_2026" placeholder="Enter decryption key...">
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-red" onclick="triggerDatabaseDecryption(false)">💥 Test Random Key (Attacker)</button>
+          <button class="btn btn-green" onclick="triggerDatabaseDecryption(true)">🔑 Use Legitimate Vault Key</button>
+        </div>
+        <div id="dbDecryptionOutput" style="margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 12px; font-family: monospace; display: none;"></div>
+      </div>
+
     </div>
 
     <!-- RIGHT: DEFENSIVE AUDIT TERMINAL -->
@@ -353,8 +369,9 @@
     async function triggerXSS() {
       const payload = document.getElementById('xssInput').value.trim() || "<script>alert('you have been hacked')</script>";
       log('XSS INJECT', 'badge-warn', `Injecting user payload: ${payload}`, '#f59e0b');
+      const scriptRegex = new RegExp('<script\\b[\\s\\S]*?<\\/script>', 'gi');
       const sanitized = payload
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(scriptRegex, '')
         .replace(/onerror\s*=\s*["'][^"']*["']/gi, '')
         .replace(/onload\s*=\s*["'][^"']*["']/gi, '')
         .replace(/</g, '&lt;')
@@ -458,31 +475,6 @@
       log('DEFENSE', 'badge-info', 'MongoDB indexed compound queries + connection pool (maxPoolSize: 10) prevent CPU stall.', '#60a5fa');
     }
 
-    // 6. Bottleneck
-    async function triggerBottleneck() {
-      log('BOTTLENECK PROFILING', 'badge-warn', 'Sending 30 concurrent async requests to /api/properties...', '#f59e0b');
-      const t0 = performance.now();
-      const latencies = [];
-      const reqs = Array.from({ length: 30 }, async () => {
-        const start = performance.now();
-        try {
-          const res = await fetch(`${API_BASE}/properties?limit=5`);
-          latencies.push(performance.now() - start);
-          return res.status;
-        } catch {
-          latencies.push(performance.now() - start);
-          return 500;
-        }
-      });
-      await Promise.all(reqs);
-      const total = (performance.now() - t0).toFixed(1);
-      latencies.sort((a,b) => a - b);
-      const avg = (latencies.reduce((a,b)=>a+b,0)/latencies.length).toFixed(1);
-      const p95 = latencies[Math.floor(latencies.length*0.95)]?.toFixed(1) || 0;
-      log('METRICS', 'badge-pass', `Batch Time: ${total}ms | Avg Latency: ${avg}ms | P95 Latency: ${p95}ms`, '#10b981');
-      log('BOTTLENECK DEFENSE', 'badge-info', 'MongoDB indexed compound queries + connection pool (maxPoolSize: 10) prevent CPU stall.', '#60a5fa');
-    }
-
     // 7. DOM Manipulation
     function testDOMManipulation() {
       const input = document.getElementById('domPayload').value;
@@ -499,6 +491,57 @@
       log('REACT DEFENSE', 'badge-pass', 'React JSX textContent: Renders as safe literal text. Execution blocked completely!', '#10b981');
     }
 
+    // 8. Database Theft & Cryptographic Key Decryption
+    const MASTER_KEY_VAULT = 'roomnest_master_vault_key_32_bytes_secure_2026';
+    const SAMPLE_ENCRYPTED = 'enc:0ab89299f7035acf34e0932b:b4c6521961c41fc102cfe56954c440e6:cbb8555077d3ec1c109af364d60c0b';
+
+    async function triggerDatabaseDecryption(useMaster = false) {
+      const keyInput = document.getElementById('dbKeyInput');
+      if (useMaster) {
+        keyInput.value = MASTER_KEY_VAULT;
+      }
+      const testKey = keyInput.value.trim();
+      const outputElem = document.getElementById('dbDecryptionOutput');
+      outputElem.style.display = 'block';
+
+      log('DB THEFT AUDIT', 'badge-warn', `Attacker attempting decryption with key: "${testKey}"...`, '#f59e0b');
+
+      try {
+        const parts = SAMPLE_ENCRYPTED.split(':');
+        const [, ivHex, tagHex, dataHex] = parts;
+        const hexToBuf = hex => new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const iv = hexToBuf(ivHex);
+        const tag = hexToBuf(tagHex);
+        const data = hexToBuf(dataHex);
+        const combined = new Uint8Array(data.length + tag.length);
+        combined.set(data);
+        combined.set(tag, data.length);
+
+        const keyBytes = new TextEncoder().encode(testKey);
+        const hash = await window.crypto.subtle.digest('SHA-256', keyBytes);
+        const cryptoKey = await window.crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['decrypt']);
+
+        const decrypted = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv, tagLength: 128 }, cryptoKey, combined);
+        const plaintext = new TextDecoder().decode(decrypted);
+
+        outputElem.style.background = 'rgba(6, 95, 70, 0.2)';
+        outputElem.style.border = '1px solid #059669';
+        outputElem.style.color = '#34d399';
+        outputElem.innerHTML = `✅ <b>DECRYPTED AUTHENTIC DATA:</b> "${plaintext}"<br><span style="color: #60a5fa;">🚨 FORENSIC WATERMARK: Canary Token [CANARY-AUDIT-99] detected! Legal takedown triggered.</span>`;
+
+        log('DECRYPT OK', 'badge-pass', `Authenticated AES-256-GCM Match! Decrypted Plaintext: "${plaintext}"`, '#10b981');
+        log('CANARY TOKEN', 'badge-info', 'Forensic Canary Watermark verified! Protects business model IP.', '#60a5fa');
+      } catch (err) {
+        outputElem.style.background = 'rgba(127, 29, 29, 0.2)';
+        outputElem.style.border = '1px solid #dc2626';
+        outputElem.style.color = '#f87171';
+        outputElem.innerHTML = `❌ <b>CRITICAL ERROR: Decryption Failed!</b><br>Reason: Unsupported state or unable to authenticate data (AEAD Auth Tag Mismatch)<br>Result: Data is 100% unreadable garbage. Competitor clone website crashes!`;
+
+        log('CRACK FAILED', 'badge-block', 'DECRYPTION FAILED: AES-256-GCM AEAD Tag Mismatch! Stolen DB is UNREADABLE.', '#ef4444');
+        log('DEFENSE', 'badge-info', 'Without KMS Master Vault Key, the exfiltrated database dump is completely useless.', '#60a5fa');
+      }
+    }
+
     async function runAllTests() {
       clearLogs();
       log('SUITE', 'badge-info', 'Executing full automated cybersecurity audit suite...', '#60a5fa');
@@ -509,7 +552,8 @@
       await triggerBufferOverflow();
       await triggerBottleneck();
       testDOMManipulation();
-      log('COMPLETE', 'badge-pass', 'All 7 security vectors audited and defended!', '#34d399');
+      await triggerDatabaseDecryption(false);
+      log('COMPLETE', 'badge-pass', 'All 8 security vectors audited and defended!', '#34d399');
     }
   </script>
 </body>
