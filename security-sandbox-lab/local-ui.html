@@ -265,12 +265,12 @@
         <h3>🗄️ 8. Database Theft & Cryptographic Key Cracking Test</h3>
         <p>Simulates an attacker who stole our raw database dump (<code>stolen_dump.json</code>). Sensitive columns are protected with <strong>AES-256-GCM Envelope Encryption</strong>.</p>
         <div class="code-box" style="font-size: 11px; color: #f59e0b;">Stolen Ciphertext: enc:0ab89299f7035acf34e0932b:b4c6521961c41fc102cfe56954c440e6:cbb8555077d3ec1c109af364d60c0b</div>
-        <p style="font-size: 12px; margin-bottom: 6px;">Enter a random guessed key to test AEAD authentication failure, or use the genuine Vault Key:</p>
+        <p style="font-size: 12px; margin-bottom: 6px;">Master Vault Key: <code style="color: #34d399;">roomnest_master_vault_key_32_bytes_secure_2026</code> (or type <code>master</code>)</p>
         <div class="input-row" style="margin-bottom: 8px;">
-          <input type="text" id="dbKeyInput" value="competitor_cracked_key_2026" placeholder="Enter decryption key...">
+          <input type="text" id="dbKeyInput" value="competitor_cracked_key_2026" placeholder="Enter key (e.g. 'mikesh' or 'master')...">
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-red" onclick="triggerDatabaseDecryption(false)">💥 Test Random Key (Attacker)</button>
+          <button class="btn btn-red" onclick="triggerDatabaseDecryption(false)">💥 Test Entered Key (Attacker)</button>
           <button class="btn btn-green" onclick="triggerDatabaseDecryption(true)">🔑 Use Legitimate Vault Key</button>
         </div>
         <div id="dbDecryptionOutput" style="margin-top: 10px; padding: 8px; border-radius: 6px; font-size: 12px; font-family: monospace; display: none;"></div>
@@ -501,6 +501,8 @@
         keyInput.value = MASTER_KEY_VAULT;
       }
       const testKey = keyInput.value.trim();
+      const isMasterShortcut = (testKey.toLowerCase() === 'master' || testKey.toLowerCase() === 'vault');
+      const effectiveKey = (useMaster || isMasterShortcut) ? MASTER_KEY_VAULT : testKey;
       const outputElem = document.getElementById('dbDecryptionOutput');
       outputElem.style.display = 'block';
 
@@ -517,7 +519,7 @@
         combined.set(data);
         combined.set(tag, data.length);
 
-        const keyBytes = new TextEncoder().encode(testKey);
+        const keyBytes = new TextEncoder().encode(effectiveKey);
         const hash = await window.crypto.subtle.digest('SHA-256', keyBytes);
         const cryptoKey = await window.crypto.subtle.importKey('raw', hash, { name: 'AES-GCM' }, false, ['decrypt']);
 
