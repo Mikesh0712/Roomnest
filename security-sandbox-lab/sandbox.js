@@ -23,8 +23,8 @@
 
 import readline from 'readline';
 
-const API_BASE = process.env.API_BASE || 'https://roomnest-m8uu.onrender.com/api';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://roomnest.vercel.app';
+let API_BASE = process.env.API_BASE || 'https://roomnest-m8uu.onrender.com/api';
+let FRONTEND_URL = process.env.FRONTEND_URL || 'https://roomnest.vercel.app';
 
 // ANSI Styling
 const C = {
@@ -52,19 +52,40 @@ const header = (title) => {
 };
 
 // ============================================================================
-// 1. DDoS / HTTP REQUEST FLOOD
+// 1. DDoS / HTTP REQUEST FLOOD (Automated & Manual Step-by-Step)
 // ============================================================================
-async function runDDoS() {
-  header('TEST 1: DDoS / HTTP REQUEST FLOOD (Rate Limiting Stress Test)');
-  console.log(`${C.dim}Target Endpoint : ${API_BASE}/auth/login${C.reset}`);
-  console.log(`${C.dim}Security Guard  : express-rate-limit (authLimiter: max 20 reqs / 15 min)${C.reset}\n`);
+async function askQuestion(query) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => rl.question(query, (ans) => { rl.close(); resolve(ans); }));
+}
 
-  console.log('[*] Blasting 30 rapid-fire authentication requests to the login gateway...\n');
+async function runDDoS(isManual = false) {
+  header(`TEST 1: DDoS / HTTP REQUEST FLOOD (${isManual ? 'MANUAL STEP-BY-STEP MODE' : 'AUTOMATED BURST'})`);
+  console.log(`${C.dim}Target Endpoint : ${API_BASE}/auth/login${C.reset}`);
+  console.log(`${C.dim}Security Guard  : express-rate-limit (authLimiter: max 20 reqs / 15 min per IP)${C.reset}\n`);
+
+  if (isManual) {
+    console.log(`${C.yellow}👉 MANUAL MODE ACTIVE:${C.reset}`);
+    console.log(`   You have full control. Press ${C.bold}[ENTER]${C.reset} to send each request one-by-one.`);
+    console.log(`   Watch the 'Quota Remaining' decrement from 20 down to 0, then witness HTTP 429!`);
+    console.log(`   Type 'q' + Enter at any time to return to menu.\n`);
+  } else {
+    console.log('[*] Blasting 30 rapid-fire authentication requests to the login gateway...\n');
+  }
 
   let blockedCount = 0;
   let passedCount = 0;
+  const maxReqs = isManual ? 25 : 30;
 
-  for (let i = 1; i <= 30; i++) {
+  for (let i = 1; i <= maxReqs; i++) {
+    if (isManual) {
+      const input = await askQuestion(`${C.cyan}👉 Press [ENTER] to fire Request #${i} (or 'q' to stop): ${C.reset}`);
+      if (input.trim().toLowerCase() === 'q') {
+        console.log('\n[!] Manual test stopped by user.\n');
+        break;
+      }
+    }
+
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -72,12 +93,17 @@ async function runDDoS() {
         body: JSON.stringify({ identifier: `flood_target_${i}@test.com`, password: 'TestPassword123!' })
       });
 
+      const remaining = res.headers.get('ratelimit-remaining');
+      const reset = res.headers.get('ratelimit-reset') || res.headers.get('retry-after');
+      const limit = res.headers.get('ratelimit-limit') || '20';
+
       if (res.status === 429) {
         blockedCount++;
-        console.log(`  [Req #${String(i).padStart(2, '0')}] ${C.bgRed}${C.white} BLOCKED 429 ${C.reset} Too Many Requests — Gateway intercepted flood`);
+        console.log(`  [Req #${String(i).padStart(2, '0')}] ${C.bgRed}${C.white} BLOCKED 429 ${C.reset} Too Many Requests | Remaining: ${C.red}0/${limit}${C.reset} | Reset in: ${reset || '?'}s`);
       } else {
         passedCount++;
-        console.log(`  [Req #${String(i).padStart(2, '0')}] ${C.green}PASSED  ${res.status}${C.reset} Processing within rate threshold`);
+        const remColor = (remaining && Number(remaining) <= 5) ? C.yellow : C.green;
+        console.log(`  [Req #${String(i).padStart(2, '0')}] ${C.green}PASSED  ${res.status}${C.reset} Accepted within limit | Remaining: ${remColor}${remaining ?? '?'}/${limit}${C.reset}`);
       }
     } catch (err) {
       console.log(`  [Req #${String(i).padStart(2, '0')}] ${C.red}ERROR${C.reset}: ${err.message}`);
@@ -85,11 +111,23 @@ async function runDDoS() {
   }
 
   console.log(`\n${C.bold}📊 ATTACK SUMMARY:${C.reset}`);
-  console.log(`   Requests Sent: 30 | Processed: ${passedCount} | Intercepted: ${blockedCount}`);
+  console.log(`   Requests Sent: ${passedCount + blockedCount} | Processed: ${passedCount} | Intercepted: ${blockedCount}`);
+
+  if (passedCount === 0 && blockedCount > 0) {
+    console.log(`\n${C.yellow}⚠️  NOTE ON PERSISTENT 429 BLOCK:${C.reset}`);
+    console.log(`   Your IP address has already exhausted its 20 allowed requests for the current`);
+    console.log(`   15-minute sliding window! express-rate-limit keeps tracking your IP in memory.`);
+    console.log(`   💡 To test again immediately:`);
+    console.log(`      1. Run the local backend: 'cd server && npm run dev'`);
+    console.log(`      2. In menu, choose '[T]' to switch Target to 'http://localhost:5000/api'`);
+    console.log(`      3. Restarting the local server instantly resets the in-memory counter to 20!`);
+  }
+
   console.log(`\n${C.bold}🛡️  DEFENSIVE MECHANISM APPLIED:${C.reset}`);
   console.log(`   • Middleware: authLimiter in server/src/middleware/rateLimiter.middleware.js`);
-  console.log(`   • Response: HTTP 429 returned after threshold reached, dropping packets.`);
-  console.log(`   • Result: Protects database from connection exhaustion and brute-force cracking.\n`);
+  console.log(`   • Configuration: windowMs: 15 * 60 * 1000 (15 mins), max: 20 per IP`);
+  console.log(`   • Headers Returned: RateLimit-Limit, RateLimit-Remaining, Retry-After`);
+  console.log(`   • Result: Prevents brute-force dictionary attacks & DB connection exhaustion.\n`);
 }
 
 // ============================================================================
@@ -375,7 +413,8 @@ function showMenu() {
   console.log(`Target API : ${API_BASE}`);
   console.log(`Target Web : ${FRONTEND_URL}\n`);
   console.log(`Select a security test to simulate locally:`);
-  console.log(`  ${C.cyan}[1]${C.reset} DDoS / HTTP Request Flood           (Rate Limit 429 Interception)`);
+  console.log(`  ${C.cyan}[1]${C.reset} DDoS / HTTP Request Flood           (Automated 30-burst test)`);
+  console.log(`  ${C.cyan}[M]${C.reset} ${C.bold}DDoS MANUAL MODE (Step-by-Step)${C.reset}      (Press ENTER to fire each request)`);
   console.log(`  ${C.cyan}[2]${C.reset} Cross-Site Scripting (XSS)          (Recursive Input Sanitization)`);
   console.log(`  ${C.cyan}[3]${C.reset} Catastrophic ReDoS Attack           (Regex Backtracking Defense)`);
   console.log(`  ${C.cyan}[4]${C.reset} Vertical Privilege Escalation       (Role Whitelisting Guard 400)`);
@@ -383,6 +422,7 @@ function showMenu() {
   console.log(`  ${C.cyan}[6]${C.reset} Concurrency & System Bottleneck     (Event Loop & DB Pool Analysis)`);
   console.log(`  ${C.cyan}[7]${C.reset} DOM Manipulation & Client-Side XSS  (React TextNodes & CSP Audit)`);
   console.log(`  ${C.cyan}[8]${C.reset} ${C.bold}RUN ALL AUDITS (Full Suite)${C.reset}`);
+  console.log(`  ${C.yellow}[T]${C.reset} Toggle Target API: ${C.bold}${API_BASE}${C.reset}`);
   console.log(`  ${C.cyan}[0]${C.reset} Exit Sandbox\n`);
 
   const rl = readline.createInterface({
@@ -390,12 +430,13 @@ function showMenu() {
     output: process.stdout
   });
 
-  rl.question(`${C.bold}Enter your choice [0-8]: ${C.reset}`, async (answer) => {
+  rl.question(`${C.bold}Enter your choice: ${C.reset}`, async (answer) => {
     rl.close();
-    const choice = answer.trim();
+    const choice = answer.trim().toUpperCase();
 
     switch (choice) {
-      case '1': await runDDoS(); break;
+      case '1': await runDDoS(false); break;
+      case 'M': await runDDoS(true); break;
       case '2': await runXSS(); break;
       case '3': await runReDoS(); break;
       case '4': await runPrivilegeEscalation(); break;
@@ -403,6 +444,15 @@ function showMenu() {
       case '6': await runBottleneckAnalysis(); break;
       case '7': await runDOMManipulationSandbox(); break;
       case '8': await runAll(); break;
+      case 'T':
+        if (API_BASE.includes('render.com')) {
+          API_BASE = 'http://localhost:5000/api';
+          console.log(`\n${C.green}Target API switched to LOCALHOST: ${API_BASE}${C.reset}\n`);
+        } else {
+          API_BASE = 'https://roomnest-m8uu.onrender.com/api';
+          console.log(`\n${C.green}Target API switched to REMOTE RENDER: ${API_BASE}${C.reset}\n`);
+        }
+        break;
       case '0':
         console.log('\nExiting security sandbox. Stay safe!\n');
         process.exit(0);
@@ -421,7 +471,9 @@ const arg = (process.argv[2] || '').toLowerCase();
 if (arg === 'all') {
   runAll();
 } else if (arg === 'ddos') {
-  runDDoS();
+  runDDoS(false);
+} else if (arg === 'manual' || arg === 'ddos-manual') {
+  runDDoS(true);
 } else if (arg === 'xss') {
   runXSS();
 } else if (arg === 'redos') {
@@ -435,7 +487,8 @@ if (arg === 'all') {
 } else if (arg === 'dom') {
   runDOMManipulationSandbox();
 } else if (arg === '--help' || arg === '-h') {
-  console.log(`Usage: node security-sandbox-lab/sandbox.js [all|ddos|xss|redos|privilege|buffer|bottleneck|dom]`);
+  console.log(`Usage: node security-sandbox-lab/sandbox.js [all|ddos|ddos-manual|xss|redos|privilege|buffer|bottleneck|dom]`);
 } else {
   showMenu();
 }
+
