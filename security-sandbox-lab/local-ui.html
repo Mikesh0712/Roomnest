@@ -248,19 +248,23 @@
       <!-- VECTOR 7: DOM MANIPULATION -->
       <div class="card">
         <h3>🖥️ 7. DOM Manipulation & Client-Side XSS Sandbox</h3>
-        <p>Compare dangerous <code>innerHTML</code> sink vs safe React <code>textContent</code> JSX auto-escaping.</p>
-        <div class="input-row">
+        <p>Compare dangerous <code>innerHTML</code> sink (Vanilla JS) vs safe React <code>textContent</code> JSX auto-escaping.</p>
+        <div class="input-row" style="margin-bottom: 8px;">
           <input type="text" id="domPayload" value="&lt;img src=&quot;x&quot; onerror=&quot;alert(&#39;DOM Hijacked!&#39;)&quot;&gt; &lt;b&gt;Bold Text&lt;/b&gt;">
-          <button class="btn btn-purple" onclick="testDOMManipulation()">Compare DOM Sinks</button>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+          <button class="btn btn-red" onclick="simulateInnerHTML()">💥 1. Test Vulnerable innerHTML</button>
+          <button class="btn btn-green" onclick="simulateReactDOM()">🛡️ 2. Test Safe React JSX</button>
+          <button class="btn btn-purple" onclick="testDOMManipulation()">⚡ 3. Compare Both Sinks</button>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
           <div style="background: #020617; border: 1px solid #7f1d1d; border-radius: 6px; padding: 10px; font-size: 12px;">
-            <div style="color: #f87171; font-weight: bold; margin-bottom: 6px;">⚠️ Vulnerable innerHTML Sink:</div>
-            <div id="vulnerableSink" style="color: #cbd5e1; font-size: 11.5px; line-height: 1.5;">Click button to simulate...</div>
+            <div style="color: #f87171; font-weight: bold; margin-bottom: 6px;">⚠️ Vulnerable innerHTML Sink (Vanilla JS):</div>
+            <div id="vulnerableSink" style="color: #cbd5e1; font-size: 11.5px; line-height: 1.5; min-height: 60px;">Click any button above to test...</div>
           </div>
           <div style="background: #020617; border: 1px solid #065f46; border-radius: 6px; padding: 10px; font-size: 12px;">
-            <div style="color: #34d399; font-weight: bold; margin-bottom: 6px;">🛡️ Safe RoomNest React DOM:</div>
-            <div id="safeSink" style="color: #cbd5e1; font-size: 11.5px; line-height: 1.5;">Click button to simulate...</div>
+            <div style="color: #34d399; font-weight: bold; margin-bottom: 6px;">🛡️ Safe RoomNest React DOM (JSX):</div>
+            <div id="safeSink" style="color: #cbd5e1; font-size: 11.5px; line-height: 1.5; min-height: 60px;">Click any button above to test...</div>
           </div>
         </div>
       </div>
@@ -309,7 +313,26 @@
       const line = document.createElement('div');
       line.className = 'log-line';
       const time = new Date().toLocaleTimeString();
-      line.innerHTML = `<span style="color: #64748b;">[${time}]</span> <span class="log-badge ${badgeClass}">${badge}</span> <span style="color: ${color};">${message}</span>`;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.style.color = '#64748b';
+      timeSpan.textContent = `[${time}] `;
+
+      const badgeSpan = document.createElement('span');
+      badgeSpan.className = `log-badge ${badgeClass}`;
+      badgeSpan.textContent = badge;
+
+      const space = document.createTextNode(' ');
+
+      const msgSpan = document.createElement('span');
+      msgSpan.style.color = color;
+      msgSpan.textContent = message; // Safe textContent: renders <script> and <img> visibly as text without executing or hiding!
+
+      line.appendChild(timeSpan);
+      line.appendChild(badgeSpan);
+      line.appendChild(space);
+      line.appendChild(msgSpan);
+
       term.appendChild(line);
       term.scrollTop = term.scrollHeight;
     }
@@ -373,18 +396,24 @@
     // 2. XSS
     async function triggerXSS() {
       const payload = document.getElementById('xssInput').value.trim() || ("<script>alert('you have been hacked')<" + "/script>");
-      log('XSS INJECT', 'badge-warn', `Injecting user payload: ${payload}`, '#f59e0b');
+      log('XSS INJECT', 'badge-warn', `Injecting user payload: "${payload}"`, '#f59e0b');
       const scriptRegex = new RegExp('<script\\b[\\s\\S]*?' + '<\\/script>', 'gi');
       const sanitized = payload
         .replace(scriptRegex, '')
         .replace(/onerror\s*=\s*["'][^"']*["']/gi, '')
         .replace(/onload\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/onclick\s*=\s*["'][^"']*["']/gi, '')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
-      log('SANITIZATION', 'badge-pass', `sanitizeMiddleware output: ${sanitized}`, '#10b981');
+      const displaySanitized = sanitized.trim() === ''
+        ? '[CLEANED TO EMPTY STRING]: Dangerous <script> block and attributes completely purged!'
+        : sanitized;
+
+      log('SANITIZATION', 'badge-pass', `sanitizeMiddleware output: "${displaySanitized}"`, '#10b981');
       log('DEFENSE', 'badge-info', 'Script tags and event handlers purged. Harmless text stored in DB.', '#60a5fa');
       log('REACT DOM', 'badge-info', 'When victim opens review: React renders textNode. Zero code executes!', '#38bdf8');
+      log('LAYMAN SUMMARY', 'badge-info', 'Layman: Attacker ne browser hijack karne ke liye script bheji thi. Backend ne use kaat kar gayab kar diya aur database me zero executable code gaya!', '#38bdf8');
     }
 
     // 3. ReDoS
@@ -506,22 +535,58 @@
       log('DEFENSE', 'badge-info', 'MongoDB indexed compound queries + connection pool (maxPoolSize: 10) prevent CPU stall.', '#60a5fa');
     }
 
-    // 7. DOM Manipulation
+    // 7. DOM Manipulation Simulations
+    function simulateInnerHTML() {
+      const input = document.getElementById('domPayload').value;
+      const vulnElem = document.getElementById('vulnerableSink');
+      log('DOM SINK (VULN)', 'badge-block', `Simulating vulnerable innerHTML with: "${input}"`, '#ef4444');
+
+      // Strip alert to prevent real annoying popups while demonstrating that HTML tags and onerror are parsed
+      const safeParsedHtml = input
+        .replace(/onerror\s*=\s*["'][^"']*["']/gi, 'onerror="[ALERT FIRED: Cookie Stolen!]"')
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '<span style="color:#ef4444; font-weight:bold;">[MALICIOUS SCRIPT EXECUTED]</span>');
+
+      vulnElem.innerHTML = `
+        <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #dc2626; border-radius: 4px; padding: 6px; margin-bottom: 6px;">
+          <span style="color: #f87171; font-weight: bold;">🔴 Raw Browser HTML Parsing:</span>
+          <div style="color: #ffffff; margin-top: 4px; font-size: 12px;">${safeParsedHtml}</div>
+        </div>
+        <div style="color: #fca5a5; font-size: 11px; line-height: 1.4;">
+          ⚠️ <b>EXPLOITED IN VANILLA JS:</b> In an insecure site (<code>element.innerHTML = input</code>), the browser treats user input as executable markup. The <code>onerror</code> event listener fires instantly, stealing JWT tokens or cookies!
+        </div>
+      `;
+
+      log('DEFENSE FAILED (Vanilla)', 'badge-block', 'Browser parsed raw tags into DOM nodes. In an un-sanitized app, attacker script runs instantly.', '#ef4444');
+      log('LAYMAN SUMMARY', 'badge-warn', 'Layman: Insecure website me user ka text sidha HTML ban jata hai. Browser script tag chala kar password chori kar leta hai!', '#fbbf24');
+    }
+
+    function simulateReactDOM() {
+      const input = document.getElementById('domPayload').value;
+      const safeElem = document.getElementById('safeSink');
+      log('REACT DOM (SAFE)', 'badge-pass', `Rendering with React JSX textContent: "${input}"`, '#10b981');
+
+      safeElem.innerHTML = `
+        <div style="background: rgba(5, 150, 105, 0.15); border: 1px solid #059669; border-radius: 4px; padding: 6px; margin-bottom: 6px;">
+          <span style="color: #34d399; font-weight: bold;">🟢 React JSX Safe Output:</span>
+          <div id="safeReactTextNode" style="color: #ffffff; margin-top: 4px; font-family: monospace; font-size: 11.5px; word-break: break-all;"></div>
+        </div>
+        <div style="color: #6ee7b7; font-size: 11px; line-height: 1.4;">
+          🛡️ <b>100% SECURE (RoomNest):</b> React Virtual DOM treats everything inside <code>{input}</code> as plain text via <code>document.createTextNode()</code>. Zero tags are parsed, zero images load, ZERO code executes!
+        </div>
+      `;
+
+      // Use textContent to prove React's exact behavior
+      document.getElementById('safeReactTextNode').textContent = input;
+
+      log('REACT DEFENSE', 'badge-pass', 'React JSX textContent: Auto-escaped into harmless literal string. ZERO CODE EXECUTES!', '#10b981');
+      log('LAYMAN SUMMARY', 'badge-info', 'Layman: RoomNest (React) me code run nahi hota, screen par simple text print ho jata hai. Koi popup nahi aaya, zero hack risk!', '#38bdf8');
+    }
+
     function testDOMManipulation() {
       const input = document.getElementById('domPayload').value;
-      log('DOM TEST', 'badge-warn', `Testing DOM string: ${input}`, '#f59e0b');
-
-      // 1. Emulate vulnerable innerHTML sink (sanitizing alert for safety in lab UI)
-      const vulnElem = document.getElementById('vulnerableSink');
-      vulnElem.innerHTML = `<span style="color: #ef4444; font-weight: 600;">[EXPLOITABLE IN VANILLA JS]:</span><br>Browser parses raw HTML tags directly. In an un-sanitized website, the <code>onerror</code> handler would execute arbitrary script and steal session cookies!`;
-      log('DOM SINK', 'badge-block', 'innerHTML vulnerability: Raw tags get parsed into DOM nodes and execute code.', '#ef4444');
-
-      // 2. Safe React textContent sink
-      const safeElem = document.getElementById('safeSink');
-      safeElem.textContent = input; // Uses document.createTextNode, EXACTLY how React JSX works!
-
-      log('REACT DEFENSE', 'badge-pass', 'React JSX textContent: Auto-escaped into literal text. ZERO CODE EXECUTES!', '#10b981');
-      log('LAYMAN SUMMARY', 'badge-info', 'Layman: React me tags execute nahi hote, screen par simple text print ho jate hain. Koi popup nahi aaya, koi cookie chori nahi hui!', '#38bdf8');
+      log('DOM TEST', 'badge-warn', `Auditing DOM sinks against input: "${input}"`, '#f59e0b');
+      simulateInnerHTML();
+      simulateReactDOM();
     }
 
     // 8. Database Theft & Cryptographic Key Decryption

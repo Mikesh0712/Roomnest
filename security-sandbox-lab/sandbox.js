@@ -195,7 +195,7 @@ async function runXSS(customPayload) {
     console.log(`        - Script tags stripped   : ${testSanitized.includes('<script>') ? 'NO' : 'YES (Purged)'}`);
     console.log(`        - Event handlers purged  : ${testSanitized.includes('onerror') || testSanitized.includes('onload') ? 'NO' : 'YES (Neutralized)'}`);
     console.log(`        - HTML Entities Encoded  : &lt; and &gt; replace < and >`);
-    console.log(`        - Clean Database Record  : ${C.green}${testSanitized}${C.reset}`);
+    console.log(`        - Clean Database Record  : ${C.green}${testSanitized.trim() === '' ? '[CLEANED TO EMPTY STRING: Malicious <script> tag completely purged]' : testSanitized}${C.reset}`);
     console.log(`      • Tier 2 (Frontend React JSX): React renders using document.createTextNode().`);
     console.log(`        Even if raw tags reached the DOM, React treats them as harmless text.`);
     console.log(`      • Outcome: The victim sees the text literally on screen; ZERO code executes!\n`);
