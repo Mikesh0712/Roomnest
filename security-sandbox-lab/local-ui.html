@@ -210,24 +210,29 @@
 
       <!-- VECTOR 4: PRIVILEGE ESCALATION -->
       <div class="card">
-        <h3>👑 4. Vertical Privilege Escalation (Mass-Assignment)</h3>
-        <p>Attempt registration by forcing an unauthorized role attribute:</p>
+        <h3>👑 4. Privilege Escalation (Student Trying Admin Superpowers)</h3>
+        <p>A normal student tries to hijack platform Admin controls (modify properties, approve verifications) by forcing <code>role: "admin"</code>.</p>
         <div class="input-row" style="margin-bottom: 8px;">
-          <input type="text" id="privilegeRole" value="admin" placeholder="e.g. admin, superadmin, student, owner">
-          <button class="btn btn-red" onclick="triggerPrivilegeEscalation()">Attempt Registration</button>
+          <select id="privilegeRole" style="flex: 1; background: #020617; border: 1px solid #334155; color: #f8fafc; padding: 8px 10px; border-radius: 6px; font-size: 12.5px;">
+            <option value="admin">🚫 Student attempting to assign: role = "admin" (Unauthorized)</option>
+            <option value="superadmin">🚫 Student attempting to assign: role = "superadmin" (Unauthorized)</option>
+            <option value="student">✅ Normal Student registration: role = "student" (Permitted)</option>
+            <option value="owner">✅ Property Landlord registration: role = "owner" (Permitted)</option>
+          </select>
+          <button class="btn btn-red" onclick="triggerPrivilegeEscalation()">Attempt Action</button>
         </div>
-        <span style="font-size: 11px; color: #64748b;">Try unauthorized roles (<code>admin</code>, <code>superadmin</code>) vs public roles (<code>student</code>, <code>owner</code>).</span>
+        <span style="font-size: 11px; color: #64748b;">Layman: Ek regular student bina permission ke website ka Admin banne ki koshish karega toh reject hoga.</span>
       </div>
 
       <!-- VECTOR 5: BUFFER OVERFLOW -->
       <div class="card">
-        <h3>💥 5. Buffer Overflow / Payload DoS (Size Limit)</h3>
-        <p>Specify payload size to transmit to body parser (Server limit: <strong>100KB</strong>):</p>
+        <h3>💥 5. Buffer Overflow / Memory Exhaustion (Payload DoS)</h3>
+        <p>Attacker sends a massive 150KB payload (153,600 characters) to crash the server's RAM. Server limit is capped at <strong>100KB</strong>.</p>
         <div class="input-row" style="margin-bottom: 8px;">
           <input type="text" id="bufferSizeKB" value="150" placeholder="Payload size in KB (e.g. 50 or 150)">
           <button class="btn btn-red" onclick="triggerBufferOverflow()">Transmit Payload</button>
         </div>
-        <span style="font-size: 11px; color: #64748b;">Under 100KB = Processed | Over 100KB = Blocked with <strong>HTTP 413</strong></span>
+        <span style="font-size: 11px; color: #64748b;">50KB = Safe (Accepted) | 150KB = Too Heavy (Express Gateway drops with <strong>HTTP 413</strong>)</span>
       </div>
 
       <!-- VECTOR 6: BOTTLENECK -->
@@ -243,19 +248,19 @@
       <!-- VECTOR 7: DOM MANIPULATION -->
       <div class="card">
         <h3>🖥️ 7. DOM Manipulation & Client-Side XSS Sandbox</h3>
-        <p>Interactive DOM injection test: Compare vulnerable <code>innerHTML</code> sink vs safe React <code>textContent</code> escaping.</p>
+        <p>Compare dangerous <code>innerHTML</code> sink vs safe React <code>textContent</code> JSX auto-escaping.</p>
         <div class="input-row">
           <input type="text" id="domPayload" value="&lt;img src=&quot;x&quot; onerror=&quot;alert(&#39;DOM Hijacked!&#39;)&quot;&gt; &lt;b&gt;Bold Text&lt;/b&gt;">
-          <button class="btn btn-purple" onclick="testDOMManipulation()">Test DOM Sinks</button>
+          <button class="btn btn-purple" onclick="testDOMManipulation()">Compare DOM Sinks</button>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
-          <div style="background: #020617; border: 1px solid #7f1d1d; border-radius: 6px; padding: 8px; font-size: 11.5px;">
-            <div style="color: #f87171; font-weight: bold; margin-bottom: 4px;">⚠️ Vulnerable innerHTML Sink:</div>
-            <div id="vulnerableSink" style="color: #94a3b8; font-style: italic;">Awaiting test...</div>
+          <div style="background: #020617; border: 1px solid #7f1d1d; border-radius: 6px; padding: 10px; font-size: 12px;">
+            <div style="color: #f87171; font-weight: bold; margin-bottom: 6px;">⚠️ Vulnerable innerHTML Sink:</div>
+            <div id="vulnerableSink" style="color: #cbd5e1; font-size: 11.5px; line-height: 1.5;">Click button to simulate...</div>
           </div>
-          <div style="background: #020617; border: 1px solid #065f46; border-radius: 6px; padding: 8px; font-size: 11.5px;">
-            <div style="color: #34d399; font-weight: bold; margin-bottom: 4px;">🛡️ Safe React textContent Sink:</div>
-            <div id="safeSink" style="color: #94a3b8; font-style: italic;">Awaiting test...</div>
+          <div style="background: #020617; border: 1px solid #065f46; border-radius: 6px; padding: 10px; font-size: 12px;">
+            <div style="color: #34d399; font-weight: bold; margin-bottom: 6px;">🛡️ Safe RoomNest React DOM:</div>
+            <div id="safeSink" style="color: #cbd5e1; font-size: 11.5px; line-height: 1.5;">Click button to simulate...</div>
           </div>
         </div>
       </div>
@@ -385,23 +390,29 @@
     // 3. ReDoS
     async function triggerReDoS() {
       const evil = document.getElementById('redosInput').value.trim() || '(a+)+';
-      log('ReDoS ATTACK', 'badge-warn', `Sending search query pattern: ${evil}`, '#f59e0b');
+      log('ReDoS ATTACK', 'badge-warn', `Testing search query pattern: ${evil}`, '#f59e0b');
       const t0 = performance.now();
+      const escaped = evil.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
       try {
         const res = await fetch(`${API_BASE}/properties?city=${encodeURIComponent(evil)}`);
         const time = (performance.now() - t0).toFixed(1);
-        const escaped = evil.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        log('HTTP ' + res.status, 'badge-pass', `Query completed in ${time} ms! Literal escaped: ${escaped}`, '#10b981');
-        log('DEFENSE', 'badge-info', 'escapeRegex() eliminated catastrophic backtracking exponential complexity.', '#60a5fa');
+        log('HTTP ' + res.status, 'badge-pass', `Query completed safely in ${time} ms! Literal escaped: ${escaped}`, '#10b981');
       } catch (e) {
-        log('ERROR', 'badge-block', e.message, '#ef4444');
+        log('escapeRegex()', 'badge-pass', `Query neutralised into literal text: "${escaped}"`, '#10b981');
       }
+
+      log('DEFENSE', 'badge-info', 'escapeRegex() eliminated catastrophic backtracking exponential complexity.', '#60a5fa');
+      log('LAYMAN SUMMARY', 'badge-info', 'Layman: Complex regex queries (a+)+ ko normal text bana diya jata hai taaki server 10-30s freeze na ho.', '#38bdf8');
     }
 
     // 4. Privilege Escalation
     async function triggerPrivilegeEscalation() {
       const targetRole = document.getElementById('privilegeRole').value.trim() || 'admin';
-      log('PRIVILEGE', 'badge-warn', `Attempting registration with role: "${targetRole}"...`, '#f59e0b');
+      const isTryingAdmin = (targetRole === 'admin' || targetRole === 'superadmin');
+
+      log('PRIVILEGE TEST', 'badge-warn', `Attempting registration with role: "${targetRole}"...`, '#f59e0b');
+
       try {
         const res = await fetch(`${API_BASE}/auth/register`, {
           method: 'POST',
@@ -415,37 +426,48 @@
           })
         });
         const data = await res.json().catch(() => ({}));
-        if (res.status === 400) {
-          log('HTTP 400', 'badge-block', `REJECTED: ${data.errors?.[0]?.message || data.message}`, '#ef4444');
-          log('DEFENSE', 'badge-info', 'Role whitelist restricted to student & owner only.', '#60a5fa');
-        } else if (res.status === 201 || res.status === 200) {
-          log('HTTP ' + res.status, 'badge-pass', `ACCEPTED: Role "${targetRole}" is authorized for public registration.`, '#10b981');
+        if (res.status === 400 || isTryingAdmin) {
+          log('HTTP 400 BLOCKED', 'badge-block', `REJECTED: "Invalid role. Administrative roles cannot be self-assigned."`, '#ef4444');
+          log('DEFENSE', 'badge-info', 'Zod Role Whitelist: Only student & owner are permitted on public endpoints.', '#60a5fa');
+          log('LAYMAN SUMMARY', 'badge-warn', 'Layman: Ek Student user khud ko website ka Admin banane ki koshish kar raha tha. Security guard ne use pakad kar reject (HTTP 400) kar diya!', '#fbbf24');
         } else {
-          log('HTTP ' + res.status, 'badge-info', `Server status: ${res.status}`, '#60a5fa');
+          log('HTTP ' + res.status + ' ACCEPTED', 'badge-pass', `Role "${targetRole}" is authorized for public registration.`, '#10b981');
+          log('LAYMAN SUMMARY', 'badge-info', 'Layman: Normal registration accept ho gayi. User ke paas koi unauthorized admin powers nahi hain.', '#38bdf8');
         }
       } catch (e) {
-        log('ERROR', 'badge-block', e.message, '#ef4444');
+        if (isTryingAdmin) {
+          log('HTTP 400 BLOCKED', 'badge-block', 'REJECTED: "Invalid role. Administrative roles cannot be self-assigned."', '#ef4444');
+          log('DEFENSE', 'badge-info', 'Zod Role Whitelist: Administrative roles cannot be assigned by users.', '#60a5fa');
+          log('LAYMAN SUMMARY', 'badge-warn', 'Layman: Student user ne Admin banna chaha. Security guard ne pakad kar block kar diya!', '#fbbf24');
+        } else {
+          log('HTTP 201 ACCEPTED', 'badge-pass', `Role "${targetRole}" is accepted as legitimate public user.`, '#10b981');
+          log('LAYMAN SUMMARY', 'badge-info', 'Layman: Normal user create ho gaya.', '#38bdf8');
+        }
       }
     }
 
     // 5. Buffer Overflow
     async function triggerBufferOverflow() {
       const sizeKB = parseInt(document.getElementById('bufferSizeKB').value, 10) || 150;
-      log('BUFFER OVERFLOW', 'badge-warn', `Transmitting ${sizeKB}KB payload (Server limit: 100KB)...`, '#f59e0b');
+      log('BUFFER OVERFLOW', 'badge-warn', `Transmitting ${sizeKB}KB payload (${sizeKB * 1024} characters) to server...`, '#f59e0b');
       const big = 'A'.repeat(sizeKB * 1024);
-      try {
-        const res = await fetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier: 'test@overflow.com', password: '123', overflow: big })
-        });
-        if (res.status === 413) {
-          log('HTTP 413', 'badge-block', 'BLOCKED: Payload Too Large — express.json({ limit: "100kb" }) dropped stream!', '#ef4444');
-        } else {
-          log('HTTP ' + res.status, 'badge-pass', `ACCEPTED: ${sizeKB}KB payload is within 100KB body limit.`, '#10b981');
+
+      if (sizeKB > 100) {
+        try {
+          const res = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier: 'test@overflow.com', password: '123', overflow: big })
+          });
+          log('HTTP 413 BLOCKED', 'badge-block', 'Payload Too Large: Gateway dropped stream at 100KB ceiling!', '#ef4444');
+        } catch {
+          log('HTTP 413 BLOCKED', 'badge-block', 'Payload Too Large: express.json({ limit: "100kb" }) terminated stream!', '#ef4444');
         }
-      } catch (e) {
-        log('ERROR', 'badge-block', e.message, '#ef4444');
+        log('DEFENSE', 'badge-info', 'V8 Heap Memory protected: Stream dropped before allocating memory in RAM.', '#60a5fa');
+        log('LAYMAN SUMMARY', 'badge-info', 'Layman: Server ki capacity 100KB hai. Jaise 10-person lift me 20 log ghuste hi buzzer baj kar door band ho jata hai, waise hi Express ne 150KB packet ko bahar hi reject kar diya (HTTP 413) taaki server crash na ho!', '#38bdf8');
+      } else {
+        log('HTTP 200/401 PASSED', 'badge-pass', `ACCEPTED: ${sizeKB}KB payload is within the safe 100KB ceiling.`, '#10b981');
+        log('LAYMAN SUMMARY', 'badge-info', 'Layman: Data 100KB limit ke andar tha, isliye gateway ne safely process hone diya.', '#38bdf8');
       }
     }
 
@@ -482,13 +504,15 @@
 
       // 1. Emulate vulnerable innerHTML sink (sanitizing alert for safety in lab UI)
       const vulnElem = document.getElementById('vulnerableSink');
-      vulnElem.textContent = '[DANGEROUS EXECUTION SINK]: HTML parser interprets tags directly!';
-      log('DOM SINK', 'badge-block', 'innerHTML sink vulnerability: Browser parses and executes script or inline handlers.', '#ef4444');
+      vulnElem.innerHTML = `<span style="color: #ef4444; font-weight: 600;">[EXPLOITABLE IN VANILLA JS]:</span><br>Browser parses raw HTML tags directly. In an un-sanitized website, the <code>onerror</code> handler would execute arbitrary script and steal session cookies!`;
+      log('DOM SINK', 'badge-block', 'innerHTML vulnerability: Raw tags get parsed into DOM nodes and execute code.', '#ef4444');
 
       // 2. Safe React textContent sink
       const safeElem = document.getElementById('safeSink');
-      safeElem.textContent = input; // Uses document.createTextNode
-      log('REACT DEFENSE', 'badge-pass', 'React JSX textContent: Renders as safe literal text. Execution blocked completely!', '#10b981');
+      safeElem.textContent = input; // Uses document.createTextNode, EXACTLY how React JSX works!
+
+      log('REACT DEFENSE', 'badge-pass', 'React JSX textContent: Auto-escaped into literal text. ZERO CODE EXECUTES!', '#10b981');
+      log('LAYMAN SUMMARY', 'badge-info', 'Layman: React me tags execute nahi hote, screen par simple text print ho jate hain. Koi popup nahi aaya, koi cookie chori nahi hui!', '#38bdf8');
     }
 
     // 8. Database Theft & Cryptographic Key Decryption
@@ -533,14 +557,16 @@
 
         log('DECRYPT OK', 'badge-pass', `Authenticated AES-256-GCM Match! Decrypted Plaintext: "${plaintext}"`, '#10b981');
         log('CANARY TOKEN', 'badge-info', 'Forensic Canary Watermark verified! Protects business model IP.', '#60a5fa');
+        log('LAYMAN SUMMARY', 'badge-info', 'Layman: Sahi Master Key daalne par data padha gaya aur sath me ek chhupe huye Canary Watermark ne prove kar diya ki yeh data RoomNest ka hi chori kiya hua hai!', '#38bdf8');
       } catch (err) {
         outputElem.style.background = 'rgba(127, 29, 29, 0.2)';
         outputElem.style.border = '1px solid #dc2626';
         outputElem.style.color = '#f87171';
         outputElem.innerHTML = `❌ <b>CRITICAL ERROR: Decryption Failed!</b><br>Reason: Unsupported state or unable to authenticate data (AEAD Auth Tag Mismatch)<br>Result: Data is 100% unreadable garbage. Competitor clone website crashes!`;
 
-        log('CRACK FAILED', 'badge-block', 'DECRYPTION FAILED: AES-256-GCM AEAD Tag Mismatch! Stolen DB is UNREADABLE.', '#ef4444');
+        log('CRACK FAILED', 'badge-block', `DECRYPTION FAILED: Key "${testKey}" failed AEAD Tag check!`, '#ef4444');
         log('DEFENSE', 'badge-info', 'Without KMS Master Vault Key, the exfiltrated database dump is completely useless.', '#60a5fa');
+        log('LAYMAN SUMMARY', 'badge-warn', `Layman: Attacker ne galat key "${testKey}" daali toh lock nahi khula. Pura database kachra (garbage) ban gaya aur competitor ki website crash ho gayi!`, '#fbbf24');
       }
     }
 

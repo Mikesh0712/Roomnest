@@ -52,8 +52,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests (Postman, server-to-server) or matched origins
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    // Allow non-browser requests, local file origin, or matched origins
+    if (!origin || origin === 'null' || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
       callback(null, true);
     } else {
       callback(new Error(`CORS blocked for origin: ${origin}`));
