@@ -228,21 +228,34 @@ async function runReDoS(customRegex) {
     const res = await fetch(`${API_BASE}/properties?city=${encodeURIComponent(evilRegexString)}`);
     const duration = (performance.now() - start).toFixed(2);
 
-    console.log(`[*] Response Received: HTTP ${res.status} in ${C.green}${duration} ms${C.reset}`);
-    console.log(`\n${C.bold}🔍 VULNERABILITY SCENARIO (What if someone searches with nested regex?):${C.reset}`);
-    console.log(`   1. ${C.red}On a VULNERABLE Website:${C.reset}`);
-    console.log(`      • Searching with '${evilRegexString}' triggers Exponential Catastrophic Backtracking.`);
-    console.log(`      • When evaluating a non-matching string (e.g., 'aaaaaaaaaaaaaaaaaaaa!'),`);
-    console.log(`        the V8 RegExp engine attempts 2^20 (1,048,576+) branching possibilities.`);
-    console.log(`      • Outcome: Node.js's Single-Threaded Event Loop freezes 100% CPU for 10-30s,`);
-    console.log(`        crashing or making the service completely unavailable for ALL users.\n`);
+    const hasRegexMeta = /[.*+?^${}()|[\]\\]/.test(evilRegexString);
+    const escaped = evilRegexString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    console.log(`   2. ${C.green}On RoomNest (escapeRegex Mitigation):${C.reset}`);
-    console.log(`      • Function: escapeRegex() runs on req.query.city before MongoDB lookup.`);
-    console.log(`      • Sanitized Literal: ${evilRegexString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
-    console.log(`      • Outcome: Metacharacters like '(', '+', ')' are escaped to harmless literals.`);
-    console.log(`        Regex complexity drops from exponential O(2^n) to linear O(n).`);
-    console.log(`        Query completed in just ${duration}ms with zero event-loop lag!\n`);
+    console.log(`[*] Response Received: HTTP ${res.status} in ${C.green}${duration} ms${C.reset}`);
+
+    if (!hasRegexMeta) {
+      console.log(`\n${C.bold}🔍 QUERY ANALYSIS FOR "${evilRegexString}":${C.reset}`);
+      console.log(`   ${C.green}✅ SAFE PLAIN-TEXT SEARCH TERM${C.reset}`);
+      console.log(`   • "${evilRegexString}" me koi regex metacharacters (brackets '()', plus '+', '*' etc.) nahi hain.`);
+      console.log(`   • Single letter ya normal words se ${C.bold}KABHI BHI ReDoS attack nahi ho sakta!${C.reset}`);
+      console.log(`   • Search engine isse simple string matching (Linear O(n)) se search karta hai.`);
+      console.log(`   • ReDoS test karne ke liye nested pattern enter karein jaise: ${C.yellow}(a+)+${C.reset} ya ${C.yellow}(a|aa)+${C.reset}\n`);
+    } else {
+      console.log(`\n${C.bold}🔍 VULNERABILITY SCENARIO (What if someone searches with nested regex?):${C.reset}`);
+      console.log(`   1. ${C.red}On a VULNERABLE Website:${C.reset}`);
+      console.log(`      • Searching with '${evilRegexString}' triggers Exponential Catastrophic Backtracking.`);
+      console.log(`      • When evaluating a non-matching string (e.g., 'aaaaaaaaaaaaaaaaaaaa!'),`);
+      console.log(`        the V8 RegExp engine attempts 2^20 (1,048,576+) branching possibilities.`);
+      console.log(`      • Outcome: Node.js's Single-Threaded Event Loop freezes 100% CPU for 10-30s,`);
+      console.log(`        crashing or making the service completely unavailable for ALL users.\n`);
+
+      console.log(`   2. ${C.green}On RoomNest (escapeRegex Mitigation):${C.reset}`);
+      console.log(`      • Function: escapeRegex() runs on req.query.city before MongoDB lookup.`);
+      console.log(`      • Sanitized Literal: ${escaped}`);
+      console.log(`      • Outcome: Metacharacters like '(', '+', ')' are escaped to harmless literals.`);
+      console.log(`        Regex complexity drops from exponential O(2^n) to linear O(n).`);
+      console.log(`        Query completed in just ${duration}ms with zero event-loop lag!\n`);
+    }
   } catch (err) {
     console.log(`[*] Error: ${err.message}`);
   }
